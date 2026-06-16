@@ -15,21 +15,18 @@ public class AdminController {
         this.listingService = listingService;
     }
 
-    // Страница модерации
     @GetMapping("/moderation")
     public String moderationPage(Model model) {
         model.addAttribute("pendingCars", listingService.getPendingListings());
         return "admin/moderation";
     }
 
-    // Кнопка: Одобрить
     @PostMapping("/listings/{id}/approve")
     public String approve(@PathVariable("id") Long id) {
         listingService.approveListing(id);
         return "redirect:/admin/moderation";
     }
 
-    // Кнопка: Удалить/Отклонить
     @PostMapping("/listings/{id}/reject")
     public String reject(@PathVariable("id") Long id) {
         listingService.deleteListing(id);

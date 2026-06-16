@@ -16,18 +16,22 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // Отключаем CSRF временно для упрощения работы с формами без токенов.
+                // Примечание: Для продакшена защиту CSRF необходимо включить!
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Разрешаем внутренние переходы и ошибки
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
 
-                        // ПРОПИСЫВАЕМ ПУТИ ПРЯМО В ЛОБ: Главная, Логин, Регистрация
+                        // Разрешенные всем страницы
                         .requestMatchers("/", "/auth/login", "/auth/register", "/error").permitAll()
 
-                        // Разрешаем статику (дизайн)
-                        .requestMatchers("/css/", "/js/", "/images/**").permitAll()
+                        // ИСПРАВЛЕНО: Маски путей со звездами (**) для статики и папки загрузок изображений
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
 
-                        // Все остальные запросы закрываем
+                        // ИСПРАВЛЕНО: Доступ к URL-адресам админки строго для пользователей с ROLE_ADMIN
+                        .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+
+                        // Все остальные действия требуют авторизации
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -47,6 +51,8 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+        // ВНИМАНИЕ: NoOpPasswordEncoder используется только для учебных целей.
+        // В продакшене замените на: return new BCryptPasswordEncoder();
         return NoOpPasswordEncoder.getInstance();
     }
 }

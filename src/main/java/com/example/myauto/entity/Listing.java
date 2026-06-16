@@ -2,6 +2,8 @@ package com.example.myauto.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "listings")
@@ -12,10 +14,14 @@ public class Listing {
     private Long id;
 
     private String title;
+
+    @Column(length = 1000)
     private String description;
+
     private Double price;
     private String carModel;
     private Integer year;
+    private String contactPhone; // Новое поле для связи
 
     @Enumerated(EnumType.STRING)
     private ListingStatus status = ListingStatus.PENDING;
@@ -25,6 +31,11 @@ public class Listing {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "listing_images", joinColumns = @JoinColumn(name = "listing_id"))
+    @Column(name = "image_path")
+    private List<String> images = new ArrayList<>();
 
     // Геттеры и Сеттеры
     public Long getId() { return id; }
@@ -45,6 +56,9 @@ public class Listing {
     public Integer getYear() { return year; }
     public void setYear(Integer year) { this.year = year; }
 
+    public String getContactPhone() { return contactPhone; }
+    public void setContactPhone(String contactPhone) { this.contactPhone = contactPhone; }
+
     public ListingStatus getStatus() { return status; }
     public void setStatus(ListingStatus status) { this.status = status; }
 
@@ -53,4 +67,7 @@ public class Listing {
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
+
+    public List<String> getImages() { return images; }
+    public void setImages(List<String> images) { this.images = images; }
 }

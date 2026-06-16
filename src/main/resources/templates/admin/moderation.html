@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8">
     <title>Панель модерации</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
@@ -19,6 +20,7 @@
         <table class="table table-bordered table-striped bg-white shadow-sm">
             <thead class="table-dark">
             <tr>
+                <th>Фото</th>
                 <th>Заголовок</th>
                 <th>Модель / Год</th>
                 <th>Цена</th>
@@ -29,6 +31,10 @@
             </thead>
             <tbody>
             <tr th:each="car : ${pendingCars}">
+                <td>
+                    <img th:if="${!#lists.isEmpty(car.images)}" th:src="${car.images[0]}" style="width: 70px; height: 50px; object-fit: cover; border-radius: 4px;" alt="Превью">
+                    <span th:if="${#lists.isEmpty(car.images)}" class="text-muted" style="font-size: 12px;">Нет фото</span>
+                </td>
                 <td th:text="${car.title}">Заголовок</td>
                 <td th:text="${car.carModel} + ' (' + ${car.year} + ')'">Модель</td>
                 <td class="text-success fw-bold" th:text="${car.price} + ' $'">Цена</td>

@@ -1,5 +1,7 @@
 package com.example.myauto.controller;
 
+import com.example.myauto.entity.Listing;
+import com.example.myauto.entity.User;
 import com.example.myauto.service.ListingService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,6 +19,9 @@ public class MainController {
     @GetMapping("/")
     public String homePage(Model model) {
         model.addAttribute("cars", listingService.getApprovedListings());
+        // Добавляем пустые объекты для работы форм в модальных окнах
+        model.addAttribute("listing", new Listing());
+        model.addAttribute("user", new User());
         return "index";
     }
 }
