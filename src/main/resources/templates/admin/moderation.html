@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Панель модерации</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Панель модератора — Ожидают проверки</h2>
+        <a href="/" class="btn btn-outline-dark">На главную</a>
+    </div>
+
+    <div th:if="${#lists.isEmpty(pendingCars)}" class="alert alert-success text-center">
+        🎉 Отлично! Нет объявлений для проверки.
+    </div>
+
+    <div class="table-responsive" th:if="${!#lists.isEmpty(pendingCars)}">
+        <table class="table table-bordered table-striped bg-white shadow-sm">
+            <thead class="table-dark">
+            <tr>
+                <th>Заголовок</th>
+                <th>Модель / Год</th>
+                <th>Цена</th>
+                <th>Описание</th>
+                <th>Продавец</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="car : ${pendingCars}">
+                <td th:text="${car.title}">Заголовок</td>
+                <td th:text="${car.carModel} + ' (' + ${car.year} + ')'">Модель</td>
+                <td class="text-success fw-bold" th:text="${car.price} + ' $'">Цена</td>
+                <td th:text="${car.description}">Описание</td>
+                <td th:text="${car.user.username}">Логин</td>
+                <td>
+                    <div class="d-flex gap-2">
+                        <form th:action="@{/admin/listings/{id}/approve(id=${car.id})}" method="post">
+                            <button type="submit" class="btn btn-sm btn-success">Одобрить</button>
+                        </form>
+                        <form th:action="@{/admin/listings/{id}/reject(id=${car.id})}" method="post">
+                            <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>
