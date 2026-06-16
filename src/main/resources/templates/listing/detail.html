@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title th:text="${car.title}">Детали объявления</title>
@@ -70,6 +71,11 @@
                     <div class="fs-4 fw-bold text-warning mt-1" th:text="${car.contactPhone}">+7 XXX XXX XX XX</div>
                 </div>
                 <a th:href="'tel:' + ${car.contactPhone}" class="btn btn-warning w-100 fw-bold mt-3">Позвонить продавцу</a>
+
+                <!-- Кнопка чата: только для авторизованных пользователей, не являющихся продавцом -->
+                <a th:if="${#authentication.name != 'anonymousUser' and #authentication.name != car.user.username}"
+                   th:href="@{/chat/{id}(id=${car.id})}"
+                   class="btn btn-primary w-100 fw-bold mt-2">💬 Написать продавцу</a>
             </div>
         </div>
     </div>

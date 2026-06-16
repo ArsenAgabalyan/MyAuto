@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'Чат — ' + ${listing.title}">Чат</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .chat-box {
+            height: 460px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .msg-row-mine  { display: flex; justify-content: flex-end; }
+        .msg-row-other { display: flex; justify-content: flex-start; }
+
+        .bubble {
+            max-width: 72%;
+            padding: 0.55rem 1rem;
+            border-radius: 1.2rem;
+            word-break: break-word;
+            font-size: 0.95rem;
+        }
+        .bubble-mine  { background: #0d6efd; color: #fff; border-bottom-right-radius: 0.2rem; }
+        .bubble-other { background: #e9ecef; color: #212529; border-bottom-left-radius: 0.2rem; }
+
+        .meta { font-size: 0.7rem; color: #adb5bd; margin-top: 2px; }
+        .meta-mine  { text-align: right; }
+        .meta-other { text-align: left; }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/">🚗 MYAUTO</a>
+        <a th:href="@{/listings/{id}(id=${listing.id})}" class="btn btn-outline-light btn-sm">← К объявлению</a>
+    </div>
+</nav>
+
+<div class="container" style="max-width: 760px;">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <span class="fw-bold" th:text="${listing.title}">Объявление</span>
+            <span class="text-warning small" th:text="'Продавец: ' + ${listing.user.username}"></span>
+        </div>
+
+        <div class="card-body p-3">
+
+            <!-- Область сообщений -->
+            <div class="chat-box mb-3" id="chatBox">
+
+                <div th:if="${#lists.isEmpty(messages)}" class="text-center text-muted my-auto">
+                    Сообщений пока нет. Начните общение!
+                </div>
+
+                <div th:each="msg : ${messages}">
+                    <!-- Моё сообщение -->
+                    <div th:if="${msg.sender.username == #authentication.name}">
+                        <div class="msg-row-mine">
+                            <div class="bubble bubble-mine" th:text="${msg.content}"></div>
+                        </div>
+                        <div class="meta meta-mine" th:text="${#temporals.format(msg.sentAt, 'HH:mm · dd.MM.yyyy')}"></div>
+                    </div>
+                    <!-- Чужое сообщение -->
+                    <div th:if="${msg.sender.username != #authentication.name}">
+                        <div class="meta meta-other" th:text="${msg.sender.username}"></div>
+                        <div class="msg-row-other">
+                            <div class="bubble bubble-other" th:text="${msg.content}"></div>
+                        </div>
+                        <div class="meta meta-other" th:text="${#temporals.format(msg.sentAt, 'HH:mm · dd.MM.yyyy')}"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Поле ввода -->
+            <div class="input-group">
+                <input type="text" id="messageInput" class="form-control form-control-lg"
+                       placeholder="Введите сообщение..." autocomplete="off" maxlength="1000">
+                <button class="btn btn-primary px-4 fw-bold" id="sendBtn">Отправить</button>
+            </div>
+            <div class="form-text text-end mt-1" id="charCounter">0 / 1000</div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script th:inline="javascript">
+    const listingId  = /*[[${listing.id}]]*/ 0;
+    const currentUser = /*[[${#authentication.name}]]*/ '';
+
+    const chatBox      = document.getElementById('chatBox');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn      = document.getElementById('sendBtn');
+    const charCounter  = document.getElementById('charCounter');
+
+    // Прокрутить вниз при загрузке
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Счётчик символов
+    messageInput.addEventListener('input', () => {
+        charCounter.textContent = messageInput.value.length + ' / 1000';
+    });
+
+    // WebSocket-соединение
+    const socket = new SockJS('/ws');
+    const stomp  = Stomp.over(socket);
+    stomp.debug  = null;
+
+    stomp.connect({}, () => {
+        stomp.subscribe('/topic/chat/' + listingId, (frame) => {
+            const data = JSON.parse(frame.body);
+            appendMessage(data.sender, data.content, data.sender === currentUser, data.sentAt);
+        });
+    }, () => {
+        // Потеря соединения
+        chatBox.insertAdjacentHTML('beforeend',
+            '<div class="text-center text-danger small my-2">Соединение потеряно. Обновите страницу.</div>');
+    });
+
+    function appendMessage(sender, content, isMine, rawTime) {
+        // Форматируем время
+        let timeStr = '';
+        try {
+            const d = new Date(rawTime);
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mo = String(d.getMonth() + 1).padStart(2, '0');
+            timeStr = hh + ':' + mm + ' · ' + dd + '.' + mo + '.' + d.getFullYear();
+        } catch (e) { timeStr = ''; }
+
+        const wrapper = document.createElement('div');
+
+        if (isMine) {
+            const row = document.createElement('div');
+            row.className = 'msg-row-mine';
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble bubble-mine';
+            bubble.textContent = content;
+            row.appendChild(bubble);
+
+            const meta = document.createElement('div');
+            meta.className = 'meta meta-mine';
+            meta.textContent = timeStr;
+
+            wrapper.appendChild(row);
+            wrapper.appendChild(meta);
+        } else {
+            const nameMeta = document.createElement('div');
+            nameMeta.className = 'meta meta-other';
+            nameMeta.textContent = sender;
+
+            const row = document.createElement('div');
+            row.className = 'msg-row-other';
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble bubble-other';
+            bubble.textContent = content;
+            row.appendChild(bubble);
+
+            const timeMeta = document.createElement('div');
+            timeMeta.className = 'meta meta-other';
+            timeMeta.textContent = timeStr;
+
+            wrapper.appendChild(nameMeta);
+            wrapper.appendChild(row);
+            wrapper.appendChild(timeMeta);
+        }
+
+        chatBox.appendChild(wrapper);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendMessage() {
+        const content = messageInput.value.trim();
+        if (!content || !stomp.connected) return;
+
+        stomp.send('/app/chat/' + listingId, {}, JSON.stringify({ content }));
+        messageInput.value = '';
+        charCounter.textContent = '0 / 1000';
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+</script>
+</body>
+</html>
