@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Чат по объявлению</title>
+    <link rel="stylesheet" href="/style.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+    <style>
+        body { background-color: #f8fafc; color: #334155; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
+        .nav-custom { background: #ffffff; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .nav-brand-custom { font-size: 22px; font-weight: 800; color: #1e293b; text-decoration: none; }
+        .nav-brand-custom span { color: #dc2626; }
+        .btn-back { text-decoration: none; color: #475569; background: #ffffff; padding: 8px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-weight: 500; }
+        .chat-container { max-width: 700px; margin: 32px auto; padding: 0 20px; }
+        .chat-box { background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; height: 550px; }
+        .chat-header { padding: 16px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; border-top-left-radius: 12px; border-top-right-radius: 12px; }
+        .chat-header h3 { margin: 0 0 4px 0; font-size: 16px; color: #1e293b; }
+        .chat-header p { margin: 0; font-size: 14px; color: #dc2626; font-weight: 600; }
+        .messages-list { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background-color: #fff; }
+        .msg { max-width: 75%; padding: 12px 16px; border-radius: 12px; font-size: 15px; line-height: 1.4; }
+        .msg.outgoing { background-color: #dc2626; color: #ffffff; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .msg.incoming { background-color: #f1f5f9; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .msg-meta { font-size: 10px; margin-top: 4px; text-align: right; opacity: 0.7; }
+        .chat-footer { padding: 16px; border-top: 1px solid #e2e8f0; background: #f8fafc; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+        .input-form { display: flex; gap: 10px; }
+        .chat-input { flex: 1; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline: none; }
+        .chat-input:focus { border-color: #dc2626; }
+        .btn-send { background: #dc2626; color: white; border: none; padding: 0 24px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn-send:hover { background: #b91c1c; }
+    </style>
+</head>
+<body>
+
+<nav class="nav-custom">
+    <a class="nav-brand-custom" href="/"><span>MY</span>AUTO</a>
+    <a th:href="@{/chat/my-chats}" class="btn-back">← В мои диалоги</a>
+</nav>
+
+<div class="chat-container">
+    <div class="chat-box">
+        <div class="chat-header">
+            <h3 th:text="'Обсуждение объявления с продавцом: ' + ${listing.user.username}"></h3>
+            <p th:text="${listing.title} + ' — ' + ${listing.price} + ' $'"></p>
+        </div>
+
+        <div class="messages-list" id="msgList">
+            <div th:each="msg : ${messages}"
+                 th:class="'msg ' + (${msg.sender.username == currentUsername} ? 'outgoing' : 'incoming')">
+                <div th:text="${msg.content}"></div>
+                <div class="msg-meta" th:text="${msg.sender.username}"></div>
+            </div>
+        </div>
+
+        <div class="chat-footer">
+            <div class="input-form">
+                <input type="text" id="messageInput" class="chat-input" placeholder="Введите сообщение..." autocomplete="off">
+                <button onclick="send()" class="btn-send">Отправить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    // Получаем переменные из Thymeleaf гарантированным способом
+    const listingId = [[${listing.id}]];
+    const currentUsername = [[${currentUsername}]];
+
+    const msgList = document.getElementById('msgList');
+    if (msgList) {
+        msgList.scrollTop = msgList.scrollHeight;
+    }
+
+    // Подключаемся к эндпоинту бэкенда /ws
+    const socket = new SockJS('/ws');
+    const stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function (frame) {
+        console.log('Connected to WebSocket successfully!');
+
+        // Подписываемся на динамический топик этой конкретной машины
+        stompClient.subscribe('/topic/chat/' + listingId, function (response) {
+            const msgObj = JSON.parse(response.body);
+            displayMessage(msgObj);
+        });
+    }, function(error) {
+        console.error("WebSocket connection error: ", error);
+    });
+
+    function send() {
+        const input = document.getElementById('messageInput');
+        if (!input) return;
+        const text = input.value.trim();
+        if (!text) return;
+
+        // Отправляем JSON объект в MessageMapping контроллера
+        stompClient.send("/app/chat/" + listingId, {}, JSON.stringify({ 'content': text }));
+        input.value = '';
+    }
+
+    function displayMessage(msg) {
+        const div = document.createElement('div');
+        const isMyMsg = (msg.sender === currentUsername);
+
+        div.className = 'msg ' + (isMyMsg ? 'outgoing' : 'incoming');
+        div.innerHTML = `<div>${msg.content}</div><div class="msg-meta">${msg.sender}</div>`;
+
+        if (msgList) {
+            msgList.appendChild(div);
+            msgList.scrollTop = msgList.scrollHeight;
+        }
+    }
+
+    // Отправка по нажатию кнопки Enter
+    const inputField = document.getElementById('messageInput');
+    if (inputField) {
+        inputField.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                send();
+            }
+        });
+    }
+</script>
+</body>
+</html>

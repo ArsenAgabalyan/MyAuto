@@ -29,10 +29,9 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("✅ Администратор создан — логин: admin, пароль: admin");
         }
 
-        // 2. Очищаем базу и добавляем 30 машин с ЛОКАЛЬНЫМИ картинками
-        if (true) {
-            System.out.println("🔄 Очистка старых данных...");
-            listingRepository.deleteAll();
+        // 2. ИСПРАВЛЕНО: Добавляем машины ТОЛЬКО если база данных пуста
+        if (listingRepository.count() == 0) {
+            System.out.println("🔄 База данных пуста. Заполнение тестовыми данными...");
 
             User admin = userRepository.findByUsername("admin").orElseThrow();
 
@@ -49,7 +48,7 @@ public class DataInitializer implements CommandLineRunner {
                     {"Kia Sportage X-Line", "Sportage NQ5", "2023", "28000", "+374 91 111 009", "Новый автомобиль, без пробега. Самая полная комплектация X-Line.", "/uploads/9.jpg"},
                     {"Honda Civic Sport", "Civic X", "2019", "16500", "+374 91 111 010", "1.5 турбо, спортивная подвеска, отличная динамика.", "/uploads/10.jpg"},
 
-                    // Дополнительные 20 машин (разные марки и годы)
+                    // Дополнительные 20 машин
                     {"Ford Mustang GT — Американская мускулатура", "Mustang VI", "2017", "24500", "+374 91 111 011", "5.0 V8 Coyote, легендарный звук, задний привод, механика.", "/uploads/11.jpg"},
                     {"Volkswagen Golf GTI — Заряженный хэтчбек", "Golf VII GTI", "2016", "15800", "+374 91 111 012", "2.0 TSI, DSG, отличное состояние, обслужен до мелочей.", "/uploads/12.jpg"},
                     {"Porsche Cayenne S — Спорт и роскошь", "Cayenne 958.2", "2015", "33000", "+374 91 111 013", "3.6 Битурбо, пневмоподвеска, премиальная акустика Bose.", "/uploads/13.jpg"},
@@ -84,12 +83,13 @@ public class DataInitializer implements CommandLineRunner {
                 listing.setUser(admin);
                 listing.setStatus(ListingStatus.APPROVED);
 
-                // Добавляем локальный путь к картинке
                 listing.getImages().add(data[6]);
 
                 listingRepository.save(listing);
             }
-            System.out.println("✅ 30 новых объявлений с ЛОКАЛЬНЫМИ картинками успешно загружены!");
+            System.out.println("✅ 30 новых объявлений успешно загружены!");
+        } else {
+            System.out.println("ℹ️ База данных уже содержит объявления. Пропуск инициализации.");
         }
     }
 }

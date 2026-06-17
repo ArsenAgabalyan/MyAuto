@@ -63,7 +63,6 @@
 </head>
 <body>
 
-<!-- NAV -->
 <nav class="nav" style="position:sticky;top:0;z-index:150">
     <a class="nav-brand" href="/"><span>MY</span>AUTO</a>
     <div class="nav-links">
@@ -77,13 +76,11 @@
 
         <div style="width:1px;height:20px;background:rgba(255,255,255,0.15)"></div>
 
-        <!-- Гость -->
         <th:block th:if="${#authentication.name == 'anonymousUser'}">
             <button class="btn btn-outline btn-sm" onclick="openModal('loginModal')" data-i18n="login">Войти</button>
             <button class="btn btn-red btn-sm" onclick="openModal('registerModal')" data-i18n="register">Регистрация</button>
         </th:block>
 
-        <!-- Авторизован -->
         <th:block th:if="${#authentication.name != 'anonymousUser'}">
             <span class="nav-user">Привет, <strong th:text="${#authentication.name}"></strong></span>
             <a th:if="${#authorization.expression('hasAuthority(''ROLE_ADMIN'')')}"
@@ -94,7 +91,6 @@
     </div>
 </nav>
 
-<!-- FILTER BAR -->
 <div class="filter-bar">
     <div class="filter-inner">
         <div class="filter-row">
@@ -119,7 +115,6 @@
     </div>
 </div>
 
-<!-- LISTINGS -->
 <div class="page-wide" style="margin-top:28px">
     <p class="page-title" data-i18n="pageTitle">Актуальные объявления</p>
 
@@ -132,7 +127,6 @@
              th:each="car : ${cars}"
              th:attr="data-title=${car.title},data-model=${car.carModel},data-year=${car.year},data-price=${car.price},data-desc=${car.description}">
             <div class="car-card">
-                <!-- Изображения -->
                 <div class="car-imgs" th:id="'imgs-' + ${car.id}">
                     <img th:if="${#lists.isEmpty(car.images)}"
                          src="https://via.placeholder.com/300x200/e5e7eb/9ca3af?text=No+Photo" alt="">
@@ -167,7 +161,6 @@
 </div>
 
 
-<!-- ═══ MODAL: Login ═══ -->
 <div class="overlay" id="loginModal" onclick="closeOnBg(event,this)">
     <div class="modal-box">
         <button class="modal-close" onclick="closeModal('loginModal')">✕</button>
@@ -182,7 +175,6 @@
     </div>
 </div>
 
-<!-- ═══ MODAL: Register ═══ -->
 <div class="overlay" id="registerModal" onclick="closeOnBg(event,this)">
     <div class="modal-box">
         <button class="modal-close" onclick="closeModal('registerModal')">✕</button>
@@ -197,7 +189,6 @@
     </div>
 </div>
 
-<!-- ═══ MODAL: Add Listing ═══ -->
 <div class="overlay" id="addModal" onclick="closeOnBg(event,this)">
     <div class="modal-box wide">
         <button class="modal-close" onclick="closeModal('addModal')">✕</button>
@@ -218,6 +209,26 @@
         </form>
     </div>
 </div>
+
+
+<th:block th:if="${#authentication.name != 'anonymousUser'}">
+    <div id="chatWidgetBtn" onclick="toggleChatWidget()" style="position: fixed; bottom: 24px; right: 24px; width: 60px; height: 60px; background-color: #dc2626; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(220,38,38,0.3); cursor: pointer; z-index: 180; transition: transform 0.2s, background-color 0.2s;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M2 1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h9.586a1 1 0 0 1 .707.293l2.853 2.853V13.5a.5.5 0 0 1 .5-.5h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2zm13-1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-.5a.5.5 0 0 1-.5.5v1.5a.5.5 0 0 1-.854.354L10.146 13H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h13z"/>
+        </svg>
+    </div>
+
+    <div id="chatWidgetBox" style="display: none; position: fixed; bottom: 96px; right: 24px; width: 360px; height: 460px; background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 12px 32px rgba(0,0,0,0.12); z-index: 180; flex-direction: column; overflow: hidden; font-family: system-ui, -apple-system, sans-serif;">
+        <div style="background: #1e293b; color: white; padding: 16px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <span id="widgetHeaderTitle" data-i18n="widgetTitle">💬 Мои диалоги</span>
+            <span onclick="toggleChatWidget()" style="cursor: pointer; opacity: 0.8; font-size: 22px; line-height: 1;">&times;</span>
+        </div>
+
+        <div id="widgetChatsList" style="flex: 1; overflow-y: auto; padding: 12px; background: #f8fafc; display: flex; flex-direction: column; gap: 8px;">
+            <div id="widgetLoadingText" style="text-align: center; color: #94a3b8; padding: 20px; font-size: 14px;">Загрузка...</div>
+        </div>
+    </div>
+</th:block>
 
 
 <script>
@@ -276,11 +287,62 @@
         document.getElementById('moreArrow').textContent=open?'▲':'▼';
     }
 
+    // ── СКРИПТ ПЛАВАЮЩЕГО ВИДЖЕТА ЧАТА ──
+    function toggleChatWidget() {
+        const widget = document.getElementById('chatWidgetBox');
+        if (!widget) return;
+        if (widget.style.display === 'none' || widget.style.display === '') {
+            widget.style.display = 'flex';
+            loadWidgetChats();
+        } else {
+            widget.style.display = 'none';
+        }
+    }
+
+    function loadWidgetChats() {
+        const listContainer = document.getElementById('widgetChatsList');
+        if (!listContainer) return;
+
+        fetch('/api/chat/my-chats-summary')
+            .then(response => {
+                if (!response.ok) throw new Error('Unauthorized');
+                return response.json();
+            })
+            .then(listings => {
+                listContainer.innerHTML = '';
+
+                if (listings.length === 0) {
+                    const emptyMsg = lang === 'en' ? 'No active dialogs' : (lang === 'hy' ? 'Ակտիվ հաղորդագրություններ չկան' : 'У вас пока нет активных диалогов');
+                    listContainer.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 40px 10px; font-size: 14px;">${emptyMsg}</div>`;
+                    return;
+                }
+
+                listings.forEach(item => {
+                    const card = document.createElement('a');
+                    card.href = '/chat/' + item.id;
+                    card.style.cssText = "display: block; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; text-decoration: none; color: #1e293b; transition: border-color 0.2s, transform 0.1s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);";
+                    card.onmouseover = () => { card.style.borderColor = '#dc2626'; card.style.transform = 'translateY(-1px)'; };
+                    card.onmouseout = () => { card.style.borderColor = '#e2e8f0'; card.style.transform = 'none'; };
+
+                    const sellerPrefix = lang === 'en' ? 'Seller' : (lang === 'hy' ? 'Վաճառող' : 'Продавец');
+
+                    card.innerHTML = `
+                        <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.title}</div>
+                        <div style="font-size: 12px; color: #64748b;">${sellerPrefix}: <span style="color: #dc2626; font-weight: 600;">${item.sellerName}</span></div>
+                    `;
+                    listContainer.appendChild(card);
+                });
+            })
+            .catch(err => {
+                listContainer.innerHTML = '<div style="text-align: center; color: #dc2626; padding: 20px; font-size: 13px;">Error</div>';
+            });
+    }
+
     // ── i18n ──
     const T = {
-        ru:{ lMake:'Марка',phMake:'Все марки',lModel:'Модель',phModel:'Все модели',lYearFrom:'Год от',lYearTo:'Год до',lPriceFrom:'Цена от ($)',lPriceTo:'Цена до ($)',phAny:'Любая',lKeywords:'Ключевые слова',phKeywords:'Кожаный салон, один хозяин...',moreFilters:'Доп. фильтры',clearFilter:'Очистить',found:'Найдено',pageTitle:'Актуальные объявления',noCars:'Нет объявлений. Будьте первым!',noResults:'Ничего не найдено',noResultsHint:'Измените параметры поиска',login:'Войти',register:'Регистрация',logout:'Выйти',sell:'+ Продать авто',moderation:'Модерация',loginTitle:'Вход в систему',regTitle:'Создать аккаунт',fUsername:'Логин',fPassword:'Пароль',fChooseLogin:'Придумайте логин',fChoosePass:'Придумайте пароль',addTitle:'Продать автомобиль',fAdTitle:'Заголовок',fCarModel:'Модель',fYear:'Год',fPrice:'Цена ($)',fPhone:'Телефон',fDesc:'Описание',fPhotos:'Фотографии',submitAd:'Отправить на модерацию',viewBtn:'Посмотреть',noAccount:'Нет аккаунта? Зарегистрироваться',haveAccount:'Есть аккаунт? Войти' },
-        en:{ lMake:'Make',phMake:'All makes',lModel:'Model',phModel:'All models',lYearFrom:'Year from',lYearTo:'Year to',lPriceFrom:'Price from ($)',lPriceTo:'Price to ($)',phAny:'Any',lKeywords:'Keywords',phKeywords:'Leather seats, one owner...',moreFilters:'More filters',clearFilter:'Clear',found:'Found',pageTitle:'Active listings',noCars:'No listings yet. Be first!',noResults:'Nothing found',noResultsHint:'Try adjusting filters',login:'Log in',register:'Register',logout:'Log out',sell:'+ Sell car',moderation:'Moderation',loginTitle:'Sign In',regTitle:'Create Account',fUsername:'Username',fPassword:'Password',fChooseLogin:'Choose username',fChoosePass:'Choose password',addTitle:'Sell a Car',fAdTitle:'Title',fCarModel:'Model',fYear:'Year',fPrice:'Price ($)',fPhone:'Phone',fDesc:'Description',fPhotos:'Photos',submitAd:'Submit for review',viewBtn:'View',noAccount:'No account? Register',haveAccount:'Have account? Log in' },
-        hy:{ lMake:'Մակնիշ',phMake:'Բոլոր մակնիշ.',lModel:'Մոդել',phModel:'Բոլոր մոդ.',lYearFrom:'Տ. սկիզբ',lYearTo:'Տ. վերջ',lPriceFrom:'Գին-սկ. ($)',lPriceTo:'Գին-վ. ($)',phAny:'Ցանկ.',lKeywords:'Հիմն.',phKeywords:'Կաշե, մեկ տեր...',moreFilters:'Ֆիլտ.',clearFilter:'Ջնջել',found:'Գտնվ.',pageTitle:'Ընթ. հայտ.',noCars:'Հայտ. չկան։',noResults:'Ոչ. չի գտ.',noResultsHint:'Փոխ. պարամ.',login:'Մուտք',register:'Գրանց.',logout:'Ելք',sell:'+ Վաճ.',moderation:'Մոդ.',loginTitle:'Մուտք գործ.',regTitle:'Ստ. հաշիվ',fUsername:'Օգտ.',fPassword:'Գաղտ.',fChooseLogin:'Ընտ. օգտ.',fChoosePass:'Ընտ. գաղտ.',addTitle:'Վաճ. ավտ.',fAdTitle:'Վերն.',fCarModel:'Մոդ.',fYear:'Թ.',fPrice:'Գ. ($)',fPhone:'Հեռ.',fDesc:'Նկ.',fPhotos:'Լուս.',submitAd:'Ուղ. մոդ.',viewBtn:'Դիտ.',noAccount:'Հաշ. չկա? Գրանց.',haveAccount:'Կա հաշ.? Մուտք' }
+        ru:{ widgetTitle:'💬 Мои диалоги', lMake:'Марка',phMake:'Все марки',lModel:'Модель',phModel:'Все модели',lYearFrom:'Год от',lYearTo:'Год до',lPriceFrom:'Цена от ($)',lPriceTo:'Цена до ($)',phAny:'Любая',lKeywords:'Ключевые слова',phKeywords:'Кожаный салон, один хозяин...',moreFilters:'Доп. фильтры',clearFilter:'Очистить',found:'Найдено',pageTitle:'Актуальные объявления',noCars:'Нет объявлений. Будьте первым!',noResults:'Ничего не найдено',noResultsHint:'Измените параметры поиска',login:'Войти',register:'Регистрация',logout:'Выйти',sell:'+ Продать авто',moderation:'Модерация',loginTitle:'Вход в систему',regTitle:'Создать аккаунт',fUsername:'Логин',fPassword:'Пароль',fChooseLogin:'Придумайте логин',fChoosePass:'Придумайте пароль',addTitle:'Продать автомобиль',fAdTitle:'Заголовок',fCarModel:'Модель',fYear:'Год',fPrice:'Цена ($)',fPhone:'Телефон',fDesc:'Описание',fPhotos:'Фотографии',submitAd:'Отправить на модерацию',viewBtn:'Посмотреть',noAccount:'Нет аккаунта? Зарегистрироваться',haveAccount:'Есть аккаунт? Войти' },
+        en:{ widgetTitle:'💬 My Chats', lMake:'Make',phMake:'All makes',lModel:'Model',phModel:'All models',lYearFrom:'Year from',lYearTo:'Year to',lPriceFrom:'Price from ($)',lPriceTo:'Price to ($)',phAny:'Any',lKeywords:'Keywords',phKeywords:'Leather seats, one owner...',moreFilters:'More filters',clearFilter:'Clear',found:'Found',pageTitle:'Active listings',noCars:'No listings yet. Be first!',noResults:'Nothing found',noResultsHint:'Try adjusting filters',login:'Log in',register:'Register',logout:'Log out',sell:'+ Sell car',moderation:'Moderation',loginTitle:'Sign In',regTitle:'Create Account',fUsername:'Username',fPassword:'Password',fChooseLogin:'Choose username',fChoosePass:'Choose password',addTitle:'Sell a Car',fAdTitle:'Title',fCarModel:'Model',fYear:'Year',fPrice:'Price ($)',fPhone:'Phone',fDesc:'Description',fPhotos:'Photos',submitAd:'Submit for review',viewBtn:'View',noAccount:'No account? Register',haveAccount:'Have account? Log in' },
+        hy:{ widgetTitle:'💬 Իմ հաղորդագր.', lMake:'Մակնիշ',phMake:'Բոլոր մակնիշ.',lModel:'Մոդել',phModel:'Բոլոր մոդ.',lYearFrom:'Տ. սկիզբ',lYearTo:'Տ. վերջ',lPriceFrom:'Գին-սկ. ($)',lPriceTo:'Գին-վ. ($)',phAny:'Ցանկ.',lKeywords:'Հիմն.',phKeywords:'Կաշե, մեկ տեր...',moreFilters:'Ֆիլտ.',clearFilter:'Ջնջել',found:'Գտնվ.',pageTitle:'Ընթ. հայտ.',noCars:'Հայտ. չկան։',noResults:'Ոչ. չի գտ.',noResultsHint:'Փոխ. պարամ.',login:'Մուտք',register:'Գրանց.',logout:'Ելք',sell:'+ Վաճ.',moderation:'Մոդ.',loginTitle:'Մուտք գործ.',regTitle:'Ստ. հաշիվ',fUsername:'Օգտ.',fPassword:'Գաղտ.',fChooseLogin:'Ընտ. օգտ.',fChoosePass:'Ընտ. գաղտ.',addTitle:'Վաճ. ավտ.',fAdTitle:'Վերն.',fCarModel:'Մոդ.',fYear:'Թ.',fPrice:'Գ. ($)',fPhone:'Հեռ.',fDesc:'Նկ.',fPhotos:'Լուս.',submitAd:'Ուղ. մոդ.',viewBtn:'Դիտ.',noAccount:'Հաշ. չկա? Գրանց.',haveAccount:'Կա հաշ.? Մուտք' }
     };
     let lang = localStorage.getItem('ma_lang') || 'ru';
     function setLang(l) { lang=l; localStorage.setItem('ma_lang',l); applyLang(); }
