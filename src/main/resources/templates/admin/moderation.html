@@ -2,51 +2,48 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Панель модерации</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Модерация — MyAuto</title>
+    <link rel="stylesheet" href="/style.css">
 </head>
-<body class="bg-light">
-<div class="container my-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Панель модератора — Ожидают проверки</h2>
-        <a href="/" class="btn btn-outline-dark">На главную</a>
+<body>
+<nav class="nav">
+    <a class="nav-brand" href="/"><span>MY</span>AUTO</a>
+    <a href="/" class="btn btn-outline btn-sm">На главную</a>
+</nav>
+<div class="page-wide">
+    <p class="page-title">Модерация объявлений</p>
+
+    <div th:if="${#lists.isEmpty(pendingCars)}" class="alert-ok">
+        🎉 Нет объявлений для проверки.
     </div>
 
-    <div th:if="${#lists.isEmpty(pendingCars)}" class="alert alert-success text-center">
-        🎉 Отлично! Нет объявлений для проверки.
-    </div>
-
-    <div class="table-responsive" th:if="${!#lists.isEmpty(pendingCars)}">
-        <table class="table table-bordered table-striped bg-white shadow-sm">
-            <thead class="table-dark">
+    <div class="card tbl-wrap" th:if="${!#lists.isEmpty(pendingCars)}">
+        <table>
+            <thead>
             <tr>
-                <th>Фото</th>
-                <th>Заголовок</th>
-                <th>Модель / Год</th>
-                <th>Цена</th>
-                <th>Описание</th>
-                <th>Продавец</th>
-                <th>Действия</th>
+                <th>Фото</th><th>Заголовок</th><th>Модель / Год</th>
+                <th>Цена</th><th>Описание</th><th>Продавец</th><th>Действия</th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="car : ${pendingCars}">
                 <td>
-                    <img th:if="${!#lists.isEmpty(car.images)}" th:src="${car.images[0]}" style="width: 70px; height: 50px; object-fit: cover; border-radius: 4px;" alt="Превью">
-                    <span th:if="${#lists.isEmpty(car.images)}" class="text-muted" style="font-size: 12px;">Нет фото</span>
+                    <img th:if="${!#lists.isEmpty(car.images)}" th:src="${car.images[0]}"
+                         style="width:70px;height:50px;object-fit:cover;border-radius:5px" alt="">
+                    <span th:if="${#lists.isEmpty(car.images)}" class="tag">Нет фото</span>
                 </td>
-                <td th:text="${car.title}">Заголовок</td>
-                <td th:text="${car.carModel} + ' (' + ${car.year} + ')'">Модель</td>
-                <td class="text-success fw-bold" th:text="${car.price} + ' $'">Цена</td>
-                <td th:text="${car.description}">Описание</td>
-                <td th:text="${car.user.username}">Логин</td>
+                <td style="font-weight:600" th:text="${car.title}"></td>
+                <td><span th:text="${car.carModel}"></span> <span class="tag" th:text="'('+${car.year}+')'"></span></td>
+                <td class="price" th:text="${car.price}+' $'"></td>
+                <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#555" th:text="${car.description}"></td>
+                <td th:text="${car.user.username}"></td>
                 <td>
-                    <div class="d-flex gap-2">
+                    <div style="display:flex;gap:6px">
                         <form th:action="@{/admin/listings/{id}/approve(id=${car.id})}" method="post">
-                            <button type="submit" class="btn btn-sm btn-success">Одобрить</button>
+                            <button class="btn btn-ok btn-sm">Одобрить</button>
                         </form>
                         <form th:action="@{/admin/listings/{id}/reject(id=${car.id})}" method="post">
-                            <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
+                            <button class="btn btn-del btn-sm">Удалить</button>
                         </form>
                     </div>
                 </td>

@@ -25,8 +25,8 @@ public class SecurityConfig {
                         // Разрешенные всем страницы
                         .requestMatchers("/", "/auth/login", "/auth/register", "/error").permitAll()
 
-                        // ИСПРАВЛЕНО: Маски путей со звездами (**) для статики и папки загрузок изображений
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
+                        // Статика: CSS, JS, изображения, загруженные файлы
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**", "/*.css", "/*.js").permitAll()
 
                         // ИСПРАВЛЕНО: Доступ к URL-адресам админки строго для пользователей с ROLE_ADMIN
                         .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")

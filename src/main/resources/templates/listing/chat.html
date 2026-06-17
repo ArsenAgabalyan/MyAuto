@@ -3,198 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <title th:text="'Чат — ' + ${listing.title}">Чат</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
     <style>
-        .chat-box {
-            height: 460px;
-            overflow-y: auto;
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-        .msg-row-mine  { display: flex; justify-content: flex-end; }
-        .msg-row-other { display: flex; justify-content: flex-start; }
-
-        .bubble {
-            max-width: 72%;
-            padding: 0.55rem 1rem;
-            border-radius: 1.2rem;
-            word-break: break-word;
-            font-size: 0.95rem;
-        }
-        .bubble-mine  { background: #0d6efd; color: #fff; border-bottom-right-radius: 0.2rem; }
-        .bubble-other { background: #e9ecef; color: #212529; border-bottom-left-radius: 0.2rem; }
-
-        .meta { font-size: 0.7rem; color: #adb5bd; margin-top: 2px; }
-        .meta-mine  { text-align: right; }
-        .meta-other { text-align: left; }
+        .chat-wrap { max-width: 720px; margin: 32px auto; padding: 0 16px; }
+        .chat-header { background: var(--dark); color: #fff; padding: 14px 18px; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        .chat-header strong { font-size: 15px; }
+        .chat-header span { font-size: 12px; color: #fbbf24; }
+        .chat-box { height: 420px; overflow-y: auto; background: #f8f9fa; border: 1px solid var(--border); border-top: none; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+        .row-mine { display: flex; justify-content: flex-end; }
+        .row-other { display: flex; justify-content: flex-start; }
+        .bubble { max-width: 70%; padding: 8px 14px; border-radius: 18px; font-size: 14px; word-break: break-word; }
+        .bubble-mine { background: var(--red); color: #fff; border-bottom-right-radius: 3px; }
+        .bubble-other { background: #e9ecef; color: #212529; border-bottom-left-radius: 3px; }
+        .meta { font-size: 11px; color: #aaa; margin-top: 2px; }
+        .meta-r { text-align: right; }
+        .chat-input { border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; background: #fff; padding: 12px; display: flex; gap: 8px; }
+        .chat-input input { flex: 1; border-radius: 20px; padding: 9px 16px; }
+        .chat-input button { border-radius: 20px; white-space: nowrap; }
+        .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--gray); text-decoration: none; margin-bottom: 14px; }
+        .back-link:hover { color: var(--red); }
     </style>
 </head>
-<body class="bg-light">
-
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="/">🚗 MYAUTO</a>
-        <a th:href="@{/listings/{id}(id=${listing.id})}" class="btn btn-outline-light btn-sm">← К объявлению</a>
-    </div>
+<body>
+<nav class="nav">
+    <a class="nav-brand" href="/"><span>MY</span>AUTO</a>
 </nav>
-
-<div class="container" style="max-width: 760px;">
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-            <span class="fw-bold" th:text="${listing.title}">Объявление</span>
-            <span class="text-warning small" th:text="'Продавец: ' + ${listing.user.username}"></span>
-        </div>
-
-        <div class="card-body p-3">
-
-            <!-- Область сообщений -->
-            <div class="chat-box mb-3" id="chatBox">
-
-                <div th:if="${#lists.isEmpty(messages)}" class="text-center text-muted my-auto">
-                    Сообщений пока нет. Начните общение!
-                </div>
-
-                <div th:each="msg : ${messages}">
-                    <!-- Моё сообщение -->
-                    <div th:if="${msg.sender.username == #authentication.name}">
-                        <div class="msg-row-mine">
-                            <div class="bubble bubble-mine" th:text="${msg.content}"></div>
-                        </div>
-                        <div class="meta meta-mine" th:text="${#temporals.format(msg.sentAt, 'HH:mm · dd.MM.yyyy')}"></div>
-                    </div>
-                    <!-- Чужое сообщение -->
-                    <div th:if="${msg.sender.username != #authentication.name}">
-                        <div class="meta meta-other" th:text="${msg.sender.username}"></div>
-                        <div class="msg-row-other">
-                            <div class="bubble bubble-other" th:text="${msg.content}"></div>
-                        </div>
-                        <div class="meta meta-other" th:text="${#temporals.format(msg.sentAt, 'HH:mm · dd.MM.yyyy')}"></div>
-                    </div>
-                </div>
+<div class="chat-wrap">
+    <a th:href="@{/listings/{id}(id=${listing.id})}" class="back-link">← К объявлению</a>
+    <div class="chat-header">
+        <strong th:text="${listing.title}"></strong>
+        <span th:text="'Продавец: ' + ${listing.user.username}"></span>
+    </div>
+    <div class="chat-box" id="chatBox">
+        <div th:if="${#lists.isEmpty(messages)}" style="text-align:center;color:#aaa;margin:auto">Сообщений пока нет</div>
+        <div th:each="msg : ${messages}">
+            <div th:if="${msg.sender.username == #authentication.name}">
+                <div class="row-mine"><div class="bubble bubble-mine" th:text="${msg.content}"></div></div>
+                <div class="meta meta-r" th:text="${#temporals.format(msg.sentAt,'HH:mm · dd.MM.yyyy')}"></div>
             </div>
-
-            <!-- Поле ввода -->
-            <div class="input-group">
-                <input type="text" id="messageInput" class="form-control form-control-lg"
-                       placeholder="Введите сообщение..." autocomplete="off" maxlength="1000">
-                <button class="btn btn-primary px-4 fw-bold" id="sendBtn">Отправить</button>
+            <div th:if="${msg.sender.username != #authentication.name}">
+                <div class="meta" th:text="${msg.sender.username}"></div>
+                <div class="row-other"><div class="bubble bubble-other" th:text="${msg.content}"></div></div>
+                <div class="meta" th:text="${#temporals.format(msg.sentAt,'HH:mm · dd.MM.yyyy')}"></div>
             </div>
-            <div class="form-text text-end mt-1" id="charCounter">0 / 1000</div>
-
         </div>
+    </div>
+    <div class="chat-input">
+        <input id="msgInput" type="text" placeholder="Введите сообщение..." maxlength="1000" autocomplete="off">
+        <button id="sendBtn" class="btn btn-red">Отправить</button>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 <script th:inline="javascript">
-    const listingId  = /*[[${listing.id}]]*/ 0;
-    const currentUser = /*[[${#authentication.name}]]*/ '';
+    const listingId = /*[[${listing.id}]]*/ 0;
+    const me = /*[[${#authentication.name}]]*/ '';
+    const box = document.getElementById('chatBox');
+    const inp = document.getElementById('msgInput');
+    box.scrollTop = box.scrollHeight;
 
-    const chatBox      = document.getElementById('chatBox');
-    const messageInput = document.getElementById('messageInput');
-    const sendBtn      = document.getElementById('sendBtn');
-    const charCounter  = document.getElementById('charCounter');
-
-    // Прокрутить вниз при загрузке
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    // Счётчик символов
-    messageInput.addEventListener('input', () => {
-        charCounter.textContent = messageInput.value.length + ' / 1000';
-    });
-
-    // WebSocket-соединение
-    const socket = new SockJS('/ws');
-    const stomp  = Stomp.over(socket);
-    stomp.debug  = null;
-
+    const stomp = Stomp.over(new SockJS('/ws'));
+    stomp.debug = null;
     stomp.connect({}, () => {
-        stomp.subscribe('/topic/chat/' + listingId, (frame) => {
-            const data = JSON.parse(frame.body);
-            appendMessage(data.sender, data.content, data.sender === currentUser, data.sentAt);
+        stomp.subscribe('/topic/chat/' + listingId, frame => {
+            const d = JSON.parse(frame.body);
+            addMsg(d.sender, d.content, d.sender === me, d.sentAt);
         });
-    }, () => {
-        // Потеря соединения
-        chatBox.insertAdjacentHTML('beforeend',
-            '<div class="text-center text-danger small my-2">Соединение потеряно. Обновите страницу.</div>');
     });
 
-    function appendMessage(sender, content, isMine, rawTime) {
-        // Форматируем время
-        let timeStr = '';
-        try {
-            const d = new Date(rawTime);
-            const hh = String(d.getHours()).padStart(2, '0');
-            const mm = String(d.getMinutes()).padStart(2, '0');
-            const dd = String(d.getDate()).padStart(2, '0');
-            const mo = String(d.getMonth() + 1).padStart(2, '0');
-            timeStr = hh + ':' + mm + ' · ' + dd + '.' + mo + '.' + d.getFullYear();
-        } catch (e) { timeStr = ''; }
-
-        const wrapper = document.createElement('div');
-
-        if (isMine) {
-            const row = document.createElement('div');
-            row.className = 'msg-row-mine';
-            const bubble = document.createElement('div');
-            bubble.className = 'bubble bubble-mine';
-            bubble.textContent = content;
-            row.appendChild(bubble);
-
-            const meta = document.createElement('div');
-            meta.className = 'meta meta-mine';
-            meta.textContent = timeStr;
-
-            wrapper.appendChild(row);
-            wrapper.appendChild(meta);
-        } else {
-            const nameMeta = document.createElement('div');
-            nameMeta.className = 'meta meta-other';
-            nameMeta.textContent = sender;
-
-            const row = document.createElement('div');
-            row.className = 'msg-row-other';
-            const bubble = document.createElement('div');
-            bubble.className = 'bubble bubble-other';
-            bubble.textContent = content;
-            row.appendChild(bubble);
-
-            const timeMeta = document.createElement('div');
-            timeMeta.className = 'meta meta-other';
-            timeMeta.textContent = timeStr;
-
-            wrapper.appendChild(nameMeta);
-            wrapper.appendChild(row);
-            wrapper.appendChild(timeMeta);
-        }
-
-        chatBox.appendChild(wrapper);
-        chatBox.scrollTop = chatBox.scrollHeight;
+    function addMsg(sender, content, mine, rawTime) {
+        let t = '';
+        try { const d = new Date(rawTime); t = d.toTimeString().slice(0,5) + ' · ' + d.toLocaleDateString('ru'); } catch(e){}
+        const w = document.createElement('div');
+        w.innerHTML = mine
+            ? `<div class="row-mine"><div class="bubble bubble-mine">${esc(content)}</div></div><div class="meta meta-r">${t}</div>`
+            : `<div class="meta">${esc(sender)}</div><div class="row-other"><div class="bubble bubble-other">${esc(content)}</div></div><div class="meta">${t}</div>`;
+        box.appendChild(w);
+        box.scrollTop = box.scrollHeight;
     }
 
-    function sendMessage() {
-        const content = messageInput.value.trim();
-        if (!content || !stomp.connected) return;
+    function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-        stomp.send('/app/chat/' + listingId, {}, JSON.stringify({ content }));
-        messageInput.value = '';
-        charCounter.textContent = '0 / 1000';
+    function send() {
+        const v = inp.value.trim();
+        if (!v || !stomp.connected) return;
+        stomp.send('/app/chat/' + listingId, {}, JSON.stringify({content: v}));
+        inp.value = '';
     }
 
-    sendBtn.addEventListener('click', sendMessage);
-    messageInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
+    document.getElementById('sendBtn').addEventListener('click', send);
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); send(); } });
 </script>
 </body>
 </html>

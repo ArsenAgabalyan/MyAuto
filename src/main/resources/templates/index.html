@@ -2,695 +2,294 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>MyAuto</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>MyAuto — Продажа автомобилей</title>
+    <link rel="stylesheet" href="/style.css">
     <style>
-        :root { --accent: #FF4D00; --accent-hover: #e03e00; }
+        /* ── NAV ── */
+        .lang-btn { background: transparent; border: 1px solid rgba(255,255,255,0.25); color: rgba(255,255,255,0.8); border-radius: 5px; padding: 3px 9px; font-size: 12px; font-weight: 700; cursor: pointer; letter-spacing: 0.5px; }
+        .lang-btn:hover, .lang-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
 
-        body { background: #f2f2f2; }
-
-        .modal-backdrop.show {
-            opacity: 1 !important;
-            backdrop-filter: blur(8px);
-            background-color: rgba(0,0,0,0.4);
-        }
-        .modal-content {
-            border: none;
-            border-radius: 1rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        /* ─── NAVBAR ─── */
-        .top-nav { background: #1a1a2e; padding: 10px 0; }
-
-        .lang-btn {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.25);
-            color: rgba(255,255,255,0.8);
-            border-radius: 6px;
-            padding: 3px 9px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            cursor: pointer;
-            letter-spacing: 0.5px;
-            transition: all 0.15s;
-        }
-        .lang-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
-        .lang-btn.active {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: #fff;
-        }
-
-        .btn-add {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 7px 16px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-        .btn-add:hover { background: var(--accent-hover); color: #fff; }
-
-        /* ─── FILTER WRAPPER ─── */
-        .filter-wrapper {
-            background: #f2f2f2;
-            padding: 14px 0 0;
-            border-bottom: 1px solid #ddd;
-        }
-        .filter-card {
-            background: #fff;
-            border-radius: 14px;
-            box-shadow: 0 2px 18px rgba(0,0,0,0.08);
-            padding: 18px 22px 14px;
-        }
-
-        /* ─── FILTER INPUTS ─── */
-        .fi-group { display: flex; flex-direction: column; }
-        .fi-label {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: #999;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-            margin-bottom: 5px;
-        }
-        .fi-input {
-            border: 1.5px solid #e4e4e4;
-            border-radius: 9px;
-            background: #fafafa;
-            font-size: 0.88rem;
-            padding: 9px 13px;
-            width: 100%;
-            color: #222;
-            transition: border-color 0.15s, background 0.15s;
-        }
-        .fi-input:focus {
-            outline: none;
-            border-color: var(--accent);
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(255,77,0,0.1);
-        }
+        /* ── FILTER BAR ── */
+        .filter-bar { background: #fff; border-bottom: 1px solid var(--border); padding: 14px 20px; }
+        .filter-inner { max-width: 1040px; margin: 0 auto; }
+        .filter-row { display: grid; grid-template-columns: repeat(6,1fr); gap: 10px; }
+        .fi-label { font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 4px; }
+        .fi-input { border: 1.5px solid var(--border); border-radius: 7px; background: #fafafa; font-size: 13px; padding: 8px 11px; width: 100%; color: #222; outline: none; transition: border-color 0.15s; }
+        .fi-input:focus { border-color: var(--red); background: #fff; }
         .fi-input::placeholder { color: #bbb; }
+        .filter-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0; flex-wrap: wrap; gap: 8px; }
+        .btn-more { background: #fff; border: 1.5px solid var(--border); border-radius: 7px; padding: 6px 13px; font-size: 13px; font-weight: 600; color: #444; cursor: pointer; }
+        .btn-more:hover, .btn-more.open { border-color: var(--red); color: var(--red); }
+        .btn-clear { background: none; border: none; color: #aaa; font-size: 13px; cursor: pointer; padding: 6px 4px; }
+        .btn-clear:hover { color: var(--red); }
+        .count-pill { background: #fff3ef; color: var(--red); border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 700; }
+        .extra-panel { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0f0; }
+        .extra-panel.open { display: block; }
 
-        /* ─── FILTER FOOTER ─── */
-        .filter-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 13px;
-            padding-top: 11px;
-            border-top: 1px solid #f0f0f0;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .btn-more-filters {
-            background: #fff;
-            border: 1.5px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 7px 15px;
-            font-size: 0.83rem;
-            font-weight: 600;
-            color: #444;
-            cursor: pointer;
-            transition: all 0.15s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-more-filters:hover { border-color: var(--accent); color: var(--accent); }
-        .btn-more-filters.open { border-color: var(--accent); color: var(--accent); background: #fff5f2; }
-        .btn-more-filters .arrow {
-            font-size: 0.7rem;
-            transition: transform 0.2s;
-        }
-        .btn-more-filters.open .arrow { transform: rotate(180deg); }
-
-        .btn-clear-filter {
-            background: none;
-            border: none;
-            color: #aaa;
-            font-size: 0.8rem;
-            cursor: pointer;
-            padding: 7px 4px;
-            transition: color 0.15s;
-        }
-        .btn-clear-filter:hover { color: var(--accent); }
-
-        .filter-count-pill {
-            background: #fff3ef;
-            color: var(--accent);
-            border-radius: 20px;
-            padding: 5px 16px;
-            font-size: 0.82rem;
-            font-weight: 700;
-        }
-
-        /* ─── ADDITIONAL FILTERS PANEL ─── */
-        .extra-filters-panel {
-            display: none;
-            border-top: 1px solid #f4f4f4;
-            margin-top: 14px;
-            padding-top: 14px;
-        }
-        .extra-filters-panel.open { display: block; }
-
-        /* ─── CAR CARDS ─── */
-        .car-col { transition: opacity 0.15s; }
+        /* ── CARS GRID ── */
+        .cars-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 16px; }
         .car-col.hidden { display: none !important; }
-        .card {
-            border: none !important;
-            border-radius: 12px !important;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 28px rgba(0,0,0,0.13) !important;
-        }
-        .btn-view {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 9px;
-            font-weight: 700;
-            font-size: 0.88rem;
-            width: 100%;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-        .btn-view:hover { background: var(--accent-hover); color: #fff; }
+        .car-card { background: #fff; border-radius: 10px; border: 1px solid var(--border); overflow: hidden; transition: transform 0.15s, box-shadow 0.15s; }
+        .car-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+        .car-imgs { position: relative; height: 200px; background: #e5e7eb; overflow: hidden; }
+        .car-imgs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.4); color: #fff; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .carousel-btn.prev { left: 8px; }
+        .carousel-btn.next { right: 8px; }
+        .car-body { padding: 14px; }
+        .car-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .car-desc { font-size: 13px; color: var(--gray); margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .car-meta { display: flex; gap: 14px; font-size: 12px; color: var(--gray); margin-bottom: 12px; }
+        .car-foot { display: flex; align-items: center; justify-content: space-between; }
+        .btn-view { background: var(--red); color: #fff; border: none; border-radius: 7px; padding: 8px 18px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
+        .btn-view:hover { background: var(--red2); color: #fff; }
+        .no-results { text-align: center; padding: 60px 0; color: var(--gray); }
+        .no-results .icon { font-size: 40px; margin-bottom: 12px; }
 
-        /* ─── STICKY ─── */
-        .sticky-top-wrapper { position: sticky; top: 0; z-index: 1030; }
+        /* ── MODAL ── */
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 200; align-items: center; justify-content: center; }
+        .overlay.open { display: flex; }
+        .modal-box { background: #fff; border-radius: 12px; padding: 28px; width: 100%; max-width: 440px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+        .modal-box.wide { max-width: 580px; }
+        .modal-close { position: absolute; top: 14px; right: 16px; background: none; border: none; font-size: 20px; color: #aaa; cursor: pointer; line-height: 1; }
+        .modal-close:hover { color: #333; }
+        .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+        .modal-link { display: block; text-align: center; margin-top: 14px; font-size: 13px; color: var(--red); text-decoration: none; }
+        .modal-link:hover { text-decoration: underline; }
+
+        @media(max-width: 700px) { .filter-row { grid-template-columns: 1fr 1fr; } }
+        @media(max-width: 400px) { .filter-row { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<div class="sticky-top-wrapper">
+<!-- NAV -->
+<nav class="nav" style="position:sticky;top:0;z-index:150">
+    <a class="nav-brand" href="/"><span>MY</span>AUTO</a>
+    <div class="nav-links">
+        <span th:if="${param.success}" class="success-notice">✓ Объявление на модерации</span>
 
-    <!-- ══════════ NAVBAR ══════════ -->
-    <nav class="top-nav">
-        <div class="container d-flex align-items-center justify-content-between">
-
-            <a class="fw-bold text-white text-decoration-none" href="/" style="font-size: 1.25rem; letter-spacing: 0.5px;">
-                🚗 MYAUTO
-            </a>
-
-            <div class="d-flex align-items-center gap-2">
-
-                <span th:if="${param.success}" class="text-warning small me-1">
-                    ★ <span data-i18n="msgSent">Объявление на модерации</span>
-                </span>
-
-                <!-- Language switcher -->
-                <div class="d-flex gap-1 me-2">
-                    <button class="lang-btn" onclick="setLang('ru')" data-lang="ru">RU</button>
-                    <button class="lang-btn" onclick="setLang('en')" data-lang="en">EN</button>
-                    <button class="lang-btn" onclick="setLang('hy')" data-lang="hy">HY</button>
-                </div>
-
-                <div style="width:1px;height:22px;background:rgba(255,255,255,0.15);"></div>
-
-                <!-- Guest -->
-                <div th:if="${#authentication.name == 'anonymousUser'}" class="d-flex gap-2 ms-2">
-                    <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">
-                        <span data-i18n="login">Войти</span>
-                    </button>
-                    <button class="btn-add" data-bs-toggle="modal" data-bs-target="#registerModal">
-                        <span data-i18n="register">Регистрация</span>
-                    </button>
-                </div>
-
-                <!-- Logged in -->
-                <div th:if="${#authentication.name != 'anonymousUser'}" class="d-flex align-items-center gap-2 ms-2">
-                    <span class="text-white small opacity-75">
-                        <span data-i18n="hello">Привет</span>,
-                        <strong th:text="${#authentication.name}"></strong>
-                    </span>
-                    <a th:if="${#authorization.expression('hasAuthority(''ROLE_ADMIN'')')}"
-                       href="/admin/moderation" class="btn btn-warning btn-sm fw-bold">
-                        <span data-i18n="moderation">Модерация</span>
-                    </a>
-                    <button class="btn-add" data-bs-toggle="modal" data-bs-target="#addListingModal">
-                        + <span data-i18n="sell">Продать авто</span>
-                    </button>
-                    <a href="/auth/logout" class="btn btn-outline-light btn-sm">
-                        <span data-i18n="logout">Выйти</span>
-                    </a>
-                </div>
-
-            </div>
+        <div style="display:flex;gap:4px">
+            <button class="lang-btn" onclick="setLang('ru')" data-lang="ru">RU</button>
+            <button class="lang-btn" onclick="setLang('en')" data-lang="en">EN</button>
+            <button class="lang-btn" onclick="setLang('hy')" data-lang="hy">HY</button>
         </div>
-    </nav>
 
-    <!-- ══════════ FILTER ══════════ -->
-    <div class="filter-wrapper">
-        <div class="container">
-            <div class="filter-card">
+        <div style="width:1px;height:20px;background:rgba(255,255,255,0.15)"></div>
 
-                <!-- Main filter row -->
-                <div class="row g-2">
-                    <div class="col-6 col-md-4 col-xl-2">
-                        <div class="fi-group">
-                            <span class="fi-label" data-i18n="lMake">Марка</span>
-                            <input type="text" id="fMake" class="fi-input" data-i18n-ph="phMake" placeholder="Все марки">
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-4 col-xl-2">
-                        <div class="fi-group">
-                            <span class="fi-label" data-i18n="lModel">Модель</span>
-                            <input type="text" id="fModel" class="fi-input" data-i18n-ph="phModel" placeholder="Все модели">
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-2 col-xl-2">
-                        <div class="fi-group">
-                            <span class="fi-label" data-i18n="lYearFrom">Год от</span>
-                            <input type="number" id="fYearMin" class="fi-input" placeholder="1990">
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-2 col-xl-2">
-                        <div class="fi-group">
-                            <span class="fi-label" data-i18n="lYearTo">Год до</span>
-                            <input type="number" id="fYearMax" class="fi-input" placeholder="2025">
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3 col-xl-2">
-                        <div class="fi-group">
-                            <span class="fi-label" data-i18n="lPriceFrom">Цена от ($)</span>
-                            <input type="number" id="fPriceMin" class="fi-input" placeholder="0">
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3 col-xl-2">
-                        <div class="fi-group">
-                            <span class="fi-label" data-i18n="lPriceTo">Цена до ($)</span>
-                            <input type="number" id="fPriceMax" class="fi-input" data-i18n-ph="phAny" placeholder="Любая">
-                        </div>
-                    </div>
-                </div>
+        <!-- Гость -->
+        <th:block th:if="${#authentication.name == 'anonymousUser'}">
+            <button class="btn btn-outline btn-sm" onclick="openModal('loginModal')" data-i18n="login">Войти</button>
+            <button class="btn btn-red btn-sm" onclick="openModal('registerModal')" data-i18n="register">Регистрация</button>
+        </th:block>
 
-                <!-- Additional filters panel -->
-                <div class="extra-filters-panel" id="extraPanel">
-                    <div class="row g-2">
-                        <div class="col-12 col-md-6">
-                            <div class="fi-group">
-                                <span class="fi-label" data-i18n="lKeywords">Ключевые слова в описании</span>
-                                <input type="text" id="fKeywords" class="fi-input"
-                                       data-i18n-ph="phKeywords"
-                                       placeholder="Например: кожаный салон, один хозяин...">
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Авторизован -->
+        <th:block th:if="${#authentication.name != 'anonymousUser'}">
+            <span class="nav-user">Привет, <strong th:text="${#authentication.name}"></strong></span>
+            <a th:if="${#authorization.expression('hasAuthority(''ROLE_ADMIN'')')}"
+               href="/admin/moderation" class="btn btn-warn btn-sm" data-i18n="moderation">Модерация</a>
+            <button class="btn btn-red btn-sm" onclick="openModal('addModal')" data-i18n="sell">+ Продать авто</button>
+            <a href="/auth/logout" class="btn btn-outline btn-sm" data-i18n="logout">Выйти</a>
+        </th:block>
+    </div>
+</nav>
 
-                <!-- Footer -->
-                <div class="filter-footer">
-                    <div class="d-flex align-items-center gap-2">
-                        <button class="btn-more-filters" id="btnMore" onclick="toggleExtra()">
-                            ☰ <span data-i18n="moreFilters">Дополнительные фильтры</span>
-                            <span class="arrow">▼</span>
-                        </button>
-                        <button class="btn-clear-filter" onclick="resetFilters()">
-                            🗑 <span data-i18n="clearFilter">Очистить фильтр</span>
-                        </button>
-                    </div>
-                    <div class="filter-count-pill">
-                        <span data-i18n="found">Найдено</span>:
-                        <span id="fCount">0</span>
-                        <span data-i18n="ads">объявлений</span>
-                    </div>
-                </div>
-
+<!-- FILTER BAR -->
+<div class="filter-bar">
+    <div class="filter-inner">
+        <div class="filter-row">
+            <div><span class="fi-label" data-i18n="lMake">Марка</span><input class="fi-input" id="fMake" placeholder="Все марки" data-i18n-ph="phMake"></div>
+            <div><span class="fi-label" data-i18n="lModel">Модель</span><input class="fi-input" id="fModel" placeholder="Все модели" data-i18n-ph="phModel"></div>
+            <div><span class="fi-label" data-i18n="lYearFrom">Год от</span><input class="fi-input" id="fYearMin" type="number" placeholder="1990"></div>
+            <div><span class="fi-label" data-i18n="lYearTo">Год до</span><input class="fi-input" id="fYearMax" type="number" placeholder="2025"></div>
+            <div><span class="fi-label" data-i18n="lPriceFrom">Цена от ($)</span><input class="fi-input" id="fPriceMin" type="number" placeholder="0"></div>
+            <div><span class="fi-label" data-i18n="lPriceTo">Цена до ($)</span><input class="fi-input" id="fPriceMax" type="number" placeholder="Любая" data-i18n-ph="phAny"></div>
+        </div>
+        <div class="extra-panel" id="extraPanel">
+            <span class="fi-label" data-i18n="lKeywords">Ключевые слова</span>
+            <input class="fi-input" id="fKeywords" placeholder="Кожаный салон, один хозяин..." data-i18n-ph="phKeywords">
+        </div>
+        <div class="filter-footer">
+            <div style="display:flex;gap:8px;align-items:center">
+                <button class="btn-more" id="btnMore" onclick="toggleExtra()">☰ <span data-i18n="moreFilters">Доп. фильтры</span> <span id="moreArrow">▼</span></button>
+                <button class="btn-clear" onclick="resetFilters()">🗑 <span data-i18n="clearFilter">Очистить</span></button>
             </div>
+            <div class="count-pill"><span data-i18n="found">Найдено</span>: <span id="fCount">0</span></div>
         </div>
     </div>
 </div>
-<!-- END STICKY -->
 
+<!-- LISTINGS -->
+<div class="page-wide" style="margin-top:28px">
+    <p class="page-title" data-i18n="pageTitle">Актуальные объявления</p>
 
-<!-- ══════════ LISTINGS ══════════ -->
-<div class="container my-4">
-    <h2 class="mb-4 fw-bold" data-i18n="pageTitle">Актуальные объявления</h2>
-
-    <div th:if="${#lists.isEmpty(cars)}" class="alert alert-info" data-i18n="noCars">
-        Сейчас нет доступных объявлений. Будьте первым!
+    <div th:if="${#lists.isEmpty(cars)}" class="alert-info" data-i18n="noCars">
+        Сейчас нет объявлений. Будьте первым!
     </div>
 
-    <div class="row row-cols-1 row-cols-md-3 g-4" id="carsGrid">
-
-        <div class="col car-col"
+    <div class="cars-grid" id="carsGrid">
+        <div class="car-col"
              th:each="car : ${cars}"
              th:attr="data-title=${car.title},data-model=${car.carModel},data-year=${car.year},data-price=${car.price},data-desc=${car.description}">
-            <div class="card h-100 shadow-sm">
-                <div th:id="'carousel-' + ${car.id}" class="carousel slide" data-bs-ride="false"
-                     style="height: 220px; background:#eee; overflow:hidden; border-radius: 12px 12px 0 0;">
-                    <div class="carousel-inner h-100">
-                        <div th:if="${#lists.isEmpty(car.images)}" class="carousel-item active h-100">
-                            <img src="https://via.placeholder.com/300x200?text=No+Photo"
-                                 class="d-block w-100 h-100" style="object-fit:cover;" alt="">
-                        </div>
-                        <div th:if="${!#lists.isEmpty(car.images)}"
-                             th:each="img, iterStat : ${car.images}"
-                             th:classappend="${iterStat.index == 0} ? 'active'"
-                             class="carousel-item h-100">
-                            <img th:src="${img}" class="d-block w-100 h-100" style="object-fit:cover;" alt="">
-                        </div>
-                    </div>
-                    <button th:if="${#lists.size(car.images) > 1}" class="carousel-control-prev" type="button"
-                            th:data-bs-target="'#carousel-' + ${car.id}" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon"></span>
-                    </button>
-                    <button th:if="${#lists.size(car.images) > 1}" class="carousel-control-next" type="button"
-                            th:data-bs-target="'#carousel-' + ${car.id}" data-bs-slide="next">
-                        <span class="carousel-control-next-icon"></span>
-                    </button>
+            <div class="car-card">
+                <!-- Изображения -->
+                <div class="car-imgs" th:id="'imgs-' + ${car.id}">
+                    <img th:if="${#lists.isEmpty(car.images)}"
+                         src="https://via.placeholder.com/300x200/e5e7eb/9ca3af?text=No+Photo" alt="">
+                    <img th:if="${!#lists.isEmpty(car.images)}"
+                         th:src="${car.images[0]}" th:attr="data-imgs=${#strings.listJoin(car.images,',')}" alt="">
+                    <button th:if="${#lists.size(car.images) > 1}" class="carousel-btn prev" onclick="prevImg(this)">‹</button>
+                    <button th:if="${#lists.size(car.images) > 1}" class="carousel-btn next" onclick="nextImg(this)">›</button>
                 </div>
-
-                <div class="card-body d-flex flex-column p-3">
-                    <h5 class="card-title fw-bold mb-1" th:text="${car.title}">Название</h5>
-                    <p class="text-muted small text-truncate mb-2" th:text="${car.description}">Описание</p>
-                    <ul class="list-group list-group-flush mb-3 mt-auto small">
-                        <li class="list-group-item px-0 py-1">
-                            <span class="text-muted" data-i18n="cardYear">Год:</span>
-                            <strong th:text="${car.year}"></strong>
-                        </li>
-                        <li class="list-group-item px-0 py-1">
-                            <span class="text-muted" data-i18n="cardModel">Модель:</span>
-                            <strong th:text="${car.carModel}"></strong>
-                        </li>
-                        <li class="list-group-item px-0 py-1">
-                            <span class="text-success fw-bold fs-5" th:text="${car.price} + ' $'"></span>
-                        </li>
-                    </ul>
-                    <a th:href="@{/listings/{id}(id=${car.id})}" class="btn-view">
-                        <span data-i18n="viewBtn">Посмотреть</span>
-                    </a>
+                <div class="car-body">
+                    <div class="car-title" th:text="${car.title}"></div>
+                    <div class="car-desc" th:text="${car.description}"></div>
+                    <div class="car-meta">
+                        <span th:text="${car.carModel}"></span>
+                        <span th:text="${car.year}"></span>
+                    </div>
+                    <div class="car-foot">
+                        <span class="price" style="font-size:18px" th:text="${car.price} + ' $'"></span>
+                        <a th:href="@{/listings/{id}(id=${car.id})}" class="btn-view" data-i18n="viewBtn">Посмотреть</a>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- No results -->
-        <div id="noResults" class="col-12" style="display:none;">
-            <div class="text-center py-5">
-                <div style="font-size:3rem;">🔍</div>
-                <h5 class="mt-3 fw-bold text-muted" data-i18n="noResults">Ничего не найдено</h5>
-                <p class="text-muted small" data-i18n="noResultsHint">Попробуйте изменить параметры поиска</p>
-                <button class="btn-add mt-2" onclick="resetFilters()" data-i18n="clearFilter">Очистить фильтр</button>
-            </div>
-        </div>
-
-    </div>
-</div>
-
-
-<!-- ══════════ MODALS ══════════ -->
-
-<!-- Login -->
-<div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content p-3">
-            <div class="modal-header border-0 pb-0">
-                <h4 class="modal-title fw-bold text-primary" data-i18n="loginTitle">Вход в систему</h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form th:action="@{/auth/login}" method="post">
-                    <div class="mb-3">
-                        <label class="form-label text-muted" data-i18n="fUsername">Логин</label>
-                        <input type="text" name="username" class="form-control form-control-lg" required>
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label text-muted" data-i18n="fPassword">Пароль</label>
-                        <input type="password" name="password" class="form-control form-control-lg" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold" data-i18n="login">Войти</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Register -->
-<div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content p-3">
-            <div class="modal-header border-0 pb-0">
-                <h4 class="modal-title fw-bold text-success" data-i18n="regTitle">Создать аккаунт</h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form th:action="@{/auth/register}" th:object="${user}" method="post">
-                    <div class="mb-3">
-                        <label class="form-label text-muted" data-i18n="fChooseLogin">Придумайте логин</label>
-                        <input type="text" th:field="*{username}" class="form-control form-control-lg" required>
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label text-muted" data-i18n="fChoosePass">Придумайте пароль</label>
-                        <input type="password" th:field="*{password}" class="form-control form-control-lg" required>
-                    </div>
-                    <button type="submit" class="btn btn-success btn-lg w-100 fw-bold" data-i18n="register">Зарегистрироваться</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Add Listing -->
-<div class="modal fade" id="addListingModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content p-3">
-            <div class="modal-header border-0 pb-0">
-                <h4 class="modal-title fw-bold" data-i18n="addTitle">Продать автомобиль</h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form th:action="@{/listings/add}" th:object="${listing}" method="post" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label class="form-label text-muted" data-i18n="fAdTitle">Заголовок объявления:</label>
-                        <input type="text" th:field="*{title}" class="form-control"
-                               placeholder="Например: Audi A4 B7 в отличном состоянии" required>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label text-muted" data-i18n="fCarModel">Модель:</label>
-                            <input type="text" th:field="*{carModel}" class="form-control" placeholder="A4 B7" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label text-muted" data-i18n="fYear">Год выпуска:</label>
-                            <input type="number" th:field="*{year}" class="form-control" placeholder="2006" required>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label text-muted" data-i18n="fPrice">Цена ($):</label>
-                            <input type="number" step="0.01" th:field="*{price}" class="form-control" placeholder="7500" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label text-muted" data-i18n="fPhone">Телефон для связи:</label>
-                            <input type="text" th:field="*{contactPhone}" class="form-control" placeholder="+X XXX XXX XX XX" required>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-muted" data-i18n="fDesc">Описание:</label>
-                        <textarea th:field="*{description}" class="form-control" rows="3"
-                                  placeholder="Опишите состояние машины, комплектацию..." required></textarea>
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label fw-bold" data-i18n="fPhotos">Фотографии:</label>
-                        <input type="file" name="imageFiles" class="form-control" multiple accept="image/*">
-                    </div>
-                    <button type="submit" class="btn-add w-100 fw-bold py-2" data-i18n="submitAd">Отправить на модерацию</button>
-                </form>
+        <div id="noResults" style="display:none;grid-column:1/-1">
+            <div class="no-results">
+                <div class="icon">🔍</div>
+                <p style="font-weight:700;margin-bottom:4px" data-i18n="noResults">Ничего не найдено</p>
+                <p style="font-size:13px" data-i18n="noResultsHint">Попробуйте изменить параметры поиска</p>
             </div>
         </div>
     </div>
 </div>
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- ═══ MODAL: Login ═══ -->
+<div class="overlay" id="loginModal" onclick="closeOnBg(event,this)">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('loginModal')">✕</button>
+        <div class="auth-logo" style="margin-bottom:16px"><h1><span>MY</span>AUTO</h1></div>
+        <p class="modal-title" data-i18n="loginTitle">Вход в систему</p>
+        <form th:action="@{/auth/login}" method="post">
+            <div class="field"><label data-i18n="fUsername">Логин</label><input type="text" name="username" required autofocus></div>
+            <div class="field"><label data-i18n="fPassword">Пароль</label><input type="password" name="password" required></div>
+            <button type="submit" class="btn btn-red" style="width:100%;padding:10px" data-i18n="login">Войти</button>
+        </form>
+        <a class="modal-link" onclick="switchModal('loginModal','registerModal')" data-i18n="noAccount">Нет аккаунта? Зарегистрироваться</a>
+    </div>
+</div>
+
+<!-- ═══ MODAL: Register ═══ -->
+<div class="overlay" id="registerModal" onclick="closeOnBg(event,this)">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('registerModal')">✕</button>
+        <div class="auth-logo" style="margin-bottom:16px"><h1><span>MY</span>AUTO</h1></div>
+        <p class="modal-title" data-i18n="regTitle">Создать аккаунт</p>
+        <form th:action="@{/auth/register}" th:object="${user}" method="post">
+            <div class="field"><label data-i18n="fChooseLogin">Придумайте логин</label><input type="text" th:field="*{username}" required></div>
+            <div class="field"><label data-i18n="fChoosePass">Придумайте пароль</label><input type="password" th:field="*{password}" required></div>
+            <button type="submit" class="btn btn-red" style="width:100%;padding:10px" data-i18n="register">Зарегистрироваться</button>
+        </form>
+        <a class="modal-link" onclick="switchModal('registerModal','loginModal')" data-i18n="haveAccount">Уже есть аккаунт? Войти</a>
+    </div>
+</div>
+
+<!-- ═══ MODAL: Add Listing ═══ -->
+<div class="overlay" id="addModal" onclick="closeOnBg(event,this)">
+    <div class="modal-box wide">
+        <button class="modal-close" onclick="closeModal('addModal')">✕</button>
+        <p class="modal-title" data-i18n="addTitle">Продать автомобиль</p>
+        <form th:action="@{/listings/add}" th:object="${listing}" method="post" enctype="multipart/form-data">
+            <div class="field"><label data-i18n="fAdTitle">Заголовок</label><input type="text" th:field="*{title}" placeholder="Audi A4 в отличном состоянии" required></div>
+            <div class="row2">
+                <div class="field"><label data-i18n="fCarModel">Модель</label><input type="text" th:field="*{carModel}" placeholder="A4 B7" required></div>
+                <div class="field"><label data-i18n="fYear">Год</label><input type="number" th:field="*{year}" placeholder="2006" required></div>
+            </div>
+            <div class="row2">
+                <div class="field"><label data-i18n="fPrice">Цена ($)</label><input type="number" step="0.01" th:field="*{price}" placeholder="7500" required></div>
+                <div class="field"><label data-i18n="fPhone">Телефон</label><input type="text" th:field="*{contactPhone}" placeholder="+374 XX XXX XXX" required></div>
+            </div>
+            <div class="field"><label data-i18n="fDesc">Описание</label><textarea th:field="*{description}" rows="3" placeholder="Состояние, пробег, комплектация..." required></textarea></div>
+            <div class="field"><label data-i18n="fPhotos">Фотографии</label><input type="file" name="imageFiles" multiple accept="image/*" style="background:#fff;padding:7px"></div>
+            <button type="submit" class="btn btn-red" style="width:100%;padding:10px" data-i18n="submitAd">Отправить на модерацию</button>
+        </form>
+    </div>
+</div>
+
+
 <script>
+    // ── MODAL ──
+    function openModal(id)  { document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+    function closeOnBg(e, el) { if (e.target === el) { el.classList.remove('open'); document.body.style.overflow=''; } }
+    function switchModal(from, to) { closeModal(from); openModal(to); }
 
-    // ══════════ TRANSLATIONS ══════════
-    const T = {
-        ru: {
-            lMake:'Марка', phMake:'Все марки',
-            lModel:'Модель', phModel:'Все модели',
-            lYearFrom:'Год от', lYearTo:'Год до',
-            lPriceFrom:'Цена от ($)', lPriceTo:'Цена до ($)', phAny:'Любая',
-            lKeywords:'Ключевые слова в описании',
-            phKeywords:'Например: кожаный салон, один хозяин...',
-            moreFilters:'Дополнительные фильтры',
-            clearFilter:'Очистить фильтр',
-            found:'Найдено', ads:'объявлений',
-            pageTitle:'Актуальные объявления',
-            noCars:'Сейчас нет доступных объявлений. Будьте первым!',
-            noResults:'Ничего не найдено',
-            noResultsHint:'Попробуйте изменить параметры поиска',
-            msgSent:'Объявление на модерации',
-            login:'Войти', register:'Регистрация',
-            logout:'Выйти', hello:'Привет',
-            sell:'Продать авто', moderation:'Модерация',
-            loginTitle:'Вход в систему', regTitle:'Создать аккаунт',
-            fUsername:'Логин', fPassword:'Пароль',
-            fChooseLogin:'Придумайте логин', fChoosePass:'Придумайте пароль',
-            addTitle:'Продать автомобиль',
-            fAdTitle:'Заголовок объявления:', fCarModel:'Модель:',
-            fYear:'Год выпуска:', fPrice:'Цена ($):',
-            fPhone:'Телефон для связи:', fDesc:'Описание:',
-            fPhotos:'Фотографии:', submitAd:'Отправить на модерацию',
-            cardYear:'Год:', cardModel:'Модель:', viewBtn:'Посмотреть',
-        },
-        en: {
-            lMake:'Make', phMake:'All makes',
-            lModel:'Model', phModel:'All models',
-            lYearFrom:'Year from', lYearTo:'Year to',
-            lPriceFrom:'Price from ($)', lPriceTo:'Price to ($)', phAny:'Any',
-            lKeywords:'Keywords in description',
-            phKeywords:'e.g. leather seats, one owner...',
-            moreFilters:'More filters',
-            clearFilter:'Clear filters',
-            found:'Found', ads:'listings',
-            pageTitle:'Active listings',
-            noCars:'No listings yet. Be the first!',
-            noResults:'Nothing found',
-            noResultsHint:'Try adjusting the filters',
-            msgSent:'Ad sent for review',
-            login:'Log in', register:'Register',
-            logout:'Log out', hello:'Hello',
-            sell:'Sell car', moderation:'Moderation',
-            loginTitle:'Sign In', regTitle:'Create Account',
-            fUsername:'Username', fPassword:'Password',
-            fChooseLogin:'Choose a username', fChoosePass:'Choose a password',
-            addTitle:'Sell a Car',
-            fAdTitle:'Ad title:', fCarModel:'Model:',
-            fYear:'Year:', fPrice:'Price ($):',
-            fPhone:'Phone:', fDesc:'Description:',
-            fPhotos:'Photos:', submitAd:'Submit for review',
-            cardYear:'Year:', cardModel:'Model:', viewBtn:'View',
-        },
-        hy: {
-            lMake:'Մակնիշ', phMake:'Բոլոր մակնիշները',
-            lModel:'Մոդել', phModel:'Բոլոր մոդելները',
-            lYearFrom:'Տարի (սկիզբ)', lYearTo:'Տարի (վերջ)',
-            lPriceFrom:'Գին-սկսած ($)', lPriceTo:'Գին-մինչ ($)', phAny:'Ցանկացած',
-            lKeywords:'Հիմնաբառեր',
-            phKeywords:'Օրինակ՝ կաշե նստ., մեկ տեր...',
-            moreFilters:'Լրացուցիչ ֆիլտրեր',
-            clearFilter:'Ջնջել ֆիլտրը',
-            found:'Գտնվել է', ads:'հայտ.',
-            pageTitle:'Ընթացիկ հայտ.',
-            noCars:'Հայտ. չկան։ Եղեք առաջինը!',
-            noResults:'Ոչինչ չի գտնվել',
-            noResultsHint:'Փոխեք որոնման պարամ.',
-            msgSent:'Հայտ. ուղարկված է',
-            login:'Մուտք', register:'Գրանցվել',
-            logout:'Ելք', hello:'Բարև',
-            sell:'Վաճառել', moderation:'Մոդերացիա',
-            loginTitle:'Մուտք գործել', regTitle:'Ստեղծել հաշիվ',
-            fUsername:'Օգտ. անուն', fPassword:'Գաղտ.',
-            fChooseLogin:'Ընտրեք օգտ. անուն', fChoosePass:'Ընտրեք գաղտ.',
-            addTitle:'Վաճառել ավտոմ.',
-            fAdTitle:'Վերնագիր:', fCarModel:'Մոդել:',
-            fYear:'Թ. արտ.:', fPrice:'Գին ($):',
-            fPhone:'Հեռ.:', fDesc:'Նկարագ.:',
-            fPhotos:'Լուս.:', submitAd:'Ուղարկել մոդ.',
-            cardYear:'Տ.:', cardModel:'Մոդ.:', viewBtn:'Դիտել',
-        }
-    };
-
-    let lang = localStorage.getItem('ma_lang') || 'ru';
-
-    function setLang(l) {
-        lang = l;
-        localStorage.setItem('ma_lang', l);
-        applyLang();
+    // ── CAROUSEL ──
+    function getImgs(btn) {
+        const wrap = btn.closest('.car-imgs');
+        const img = wrap.querySelector('img');
+        return { img, list: img.dataset.imgs ? img.dataset.imgs.split(',') : [img.src], idx: parseInt(img.dataset.idx||0) };
     }
+    function prevImg(btn) { const {img,list,idx} = getImgs(btn); const n=(idx-1+list.length)%list.length; img.src=list[n]; img.dataset.idx=n; }
+    function nextImg(btn) { const {img,list,idx} = getImgs(btn); const n=(idx+1)%list.length; img.src=list[n]; img.dataset.idx=n; }
 
-    function applyLang() {
-        const t = T[lang];
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            const k = el.dataset.i18n;
-            if (t[k] !== undefined) el.textContent = t[k];
-        });
-        document.querySelectorAll('[data-i18n-ph]').forEach(el => {
-            const k = el.dataset.i18nPh;
-            if (t[k] !== undefined) el.placeholder = t[k];
-        });
-        document.querySelectorAll('.lang-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.lang === lang);
-        });
-    }
-
-
-    // ══════════ FILTER ══════════
-    const F = {
-        make:     document.getElementById('fMake'),
-        model:    document.getElementById('fModel'),
-        yearMin:  document.getElementById('fYearMin'),
-        yearMax:  document.getElementById('fYearMax'),
-        priceMin: document.getElementById('fPriceMin'),
-        priceMax: document.getElementById('fPriceMax'),
-        keywords: document.getElementById('fKeywords'),
-    };
-    const countEl  = document.getElementById('fCount');
-    const noRes    = document.getElementById('noResults');
-    const cards    = document.querySelectorAll('.car-col');
-    const total    = cards.length;
+    // ── FILTER ──
+    const F = { make:document.getElementById('fMake'), model:document.getElementById('fModel'),
+        yearMin:document.getElementById('fYearMin'), yearMax:document.getElementById('fYearMax'),
+        priceMin:document.getElementById('fPriceMin'), priceMax:document.getElementById('fPriceMax'),
+        keywords:document.getElementById('fKeywords') };
+    const cards = document.querySelectorAll('.car-col');
+    const total = cards.length;
 
     function applyFilters() {
-        const make  = (F.make.value     || '').toLowerCase().trim();
-        const model = (F.model.value    || '').toLowerCase().trim();
-        const kw    = (F.keywords.value || '').toLowerCase().trim();
-        const pMin  = parseFloat(F.priceMin.value) || 0;
-        const pMax  = parseFloat(F.priceMax.value) || Infinity;
-        const yMin  = parseInt(F.yearMin.value)    || 0;
-        const yMax  = parseInt(F.yearMax.value)    || Infinity;
-
-        let visible = 0;
+        const make=F.make.value.toLowerCase().trim(), model=F.model.value.toLowerCase().trim(),
+            kw=F.keywords.value.toLowerCase().trim(), pMin=parseFloat(F.priceMin.value)||0,
+            pMax=parseFloat(F.priceMax.value)||Infinity, yMin=parseInt(F.yearMin.value)||0, yMax=parseInt(F.yearMax.value)||Infinity;
+        let vis=0;
         cards.forEach(c => {
-            const title  = (c.dataset.title || '').toLowerCase();
-            const cModel = (c.dataset.model || '').toLowerCase();
-            const desc   = (c.dataset.desc  || '').toLowerCase();
-            const price  = parseFloat(c.dataset.price) || 0;
-            const year   = parseInt(c.dataset.year)    || 0;
-
-            const ok =
-                (!make  || title.includes(make)  || cModel.includes(make)) &&
-                (!model || cModel.includes(model)) &&
-                (!kw    || desc.includes(kw) || title.includes(kw)) &&
-                price >= pMin && price <= pMax &&
-                year  >= yMin && year  <= yMax;
-
-            c.classList.toggle('hidden', !ok);
-            if (ok) visible++;
+            const ok = (!make||c.dataset.title.toLowerCase().includes(make)||c.dataset.model.toLowerCase().includes(make))
+                && (!model||c.dataset.model.toLowerCase().includes(model))
+                && (!kw||c.dataset.desc.toLowerCase().includes(kw)||c.dataset.title.toLowerCase().includes(kw))
+                && parseFloat(c.dataset.price)>=pMin && parseFloat(c.dataset.price)<=pMax
+                && parseInt(c.dataset.year)>=yMin && parseInt(c.dataset.year)<=yMax;
+            c.classList.toggle('hidden',!ok);
+            if(ok) vis++;
         });
-
-        countEl.textContent = visible;
-        noRes.style.display = (visible === 0 && total > 0) ? 'block' : 'none';
+        document.getElementById('fCount').textContent=vis;
+        document.getElementById('noResults').style.display=(vis===0&&total>0)?'block':'none';
     }
-
-    Object.values(F).forEach(el => el && el.addEventListener('input', applyFilters));
+    Object.values(F).forEach(el=>el&&el.addEventListener('input',applyFilters));
 
     function resetFilters() {
-        Object.values(F).forEach(el => { if (el) el.value = ''; });
-        // Close extra panel on reset
+        Object.values(F).forEach(el=>{if(el)el.value='';});
         document.getElementById('extraPanel').classList.remove('open');
         document.getElementById('btnMore').classList.remove('open');
+        document.getElementById('moreArrow').textContent='▼';
         applyFilters();
     }
-
-    // ── Toggle additional filters ──
     function toggleExtra() {
-        const panel = document.getElementById('extraPanel');
-        const btn   = document.getElementById('btnMore');
-        const open  = panel.classList.toggle('open');
-        btn.classList.toggle('open', open);
+        const open=document.getElementById('extraPanel').classList.toggle('open');
+        document.getElementById('btnMore').classList.toggle('open',open);
+        document.getElementById('moreArrow').textContent=open?'▲':'▼';
     }
 
-    // ── Init ──
+    // ── i18n ──
+    const T = {
+        ru:{ lMake:'Марка',phMake:'Все марки',lModel:'Модель',phModel:'Все модели',lYearFrom:'Год от',lYearTo:'Год до',lPriceFrom:'Цена от ($)',lPriceTo:'Цена до ($)',phAny:'Любая',lKeywords:'Ключевые слова',phKeywords:'Кожаный салон, один хозяин...',moreFilters:'Доп. фильтры',clearFilter:'Очистить',found:'Найдено',pageTitle:'Актуальные объявления',noCars:'Нет объявлений. Будьте первым!',noResults:'Ничего не найдено',noResultsHint:'Измените параметры поиска',login:'Войти',register:'Регистрация',logout:'Выйти',sell:'+ Продать авто',moderation:'Модерация',loginTitle:'Вход в систему',regTitle:'Создать аккаунт',fUsername:'Логин',fPassword:'Пароль',fChooseLogin:'Придумайте логин',fChoosePass:'Придумайте пароль',addTitle:'Продать автомобиль',fAdTitle:'Заголовок',fCarModel:'Модель',fYear:'Год',fPrice:'Цена ($)',fPhone:'Телефон',fDesc:'Описание',fPhotos:'Фотографии',submitAd:'Отправить на модерацию',viewBtn:'Посмотреть',noAccount:'Нет аккаунта? Зарегистрироваться',haveAccount:'Есть аккаунт? Войти' },
+        en:{ lMake:'Make',phMake:'All makes',lModel:'Model',phModel:'All models',lYearFrom:'Year from',lYearTo:'Year to',lPriceFrom:'Price from ($)',lPriceTo:'Price to ($)',phAny:'Any',lKeywords:'Keywords',phKeywords:'Leather seats, one owner...',moreFilters:'More filters',clearFilter:'Clear',found:'Found',pageTitle:'Active listings',noCars:'No listings yet. Be first!',noResults:'Nothing found',noResultsHint:'Try adjusting filters',login:'Log in',register:'Register',logout:'Log out',sell:'+ Sell car',moderation:'Moderation',loginTitle:'Sign In',regTitle:'Create Account',fUsername:'Username',fPassword:'Password',fChooseLogin:'Choose username',fChoosePass:'Choose password',addTitle:'Sell a Car',fAdTitle:'Title',fCarModel:'Model',fYear:'Year',fPrice:'Price ($)',fPhone:'Phone',fDesc:'Description',fPhotos:'Photos',submitAd:'Submit for review',viewBtn:'View',noAccount:'No account? Register',haveAccount:'Have account? Log in' },
+        hy:{ lMake:'Մակնիշ',phMake:'Բոլոր մակնիշ.',lModel:'Մոդել',phModel:'Բոլոր մոդ.',lYearFrom:'Տ. սկիզբ',lYearTo:'Տ. վերջ',lPriceFrom:'Գին-սկ. ($)',lPriceTo:'Գին-վ. ($)',phAny:'Ցանկ.',lKeywords:'Հիմն.',phKeywords:'Կաշե, մեկ տեր...',moreFilters:'Ֆիլտ.',clearFilter:'Ջնջել',found:'Գտնվ.',pageTitle:'Ընթ. հայտ.',noCars:'Հայտ. չկան։',noResults:'Ոչ. չի գտ.',noResultsHint:'Փոխ. պարամ.',login:'Մուտք',register:'Գրանց.',logout:'Ելք',sell:'+ Վաճ.',moderation:'Մոդ.',loginTitle:'Մուտք գործ.',regTitle:'Ստ. հաշիվ',fUsername:'Օգտ.',fPassword:'Գաղտ.',fChooseLogin:'Ընտ. օգտ.',fChoosePass:'Ընտ. գաղտ.',addTitle:'Վաճ. ավտ.',fAdTitle:'Վերն.',fCarModel:'Մոդ.',fYear:'Թ.',fPrice:'Գ. ($)',fPhone:'Հեռ.',fDesc:'Նկ.',fPhotos:'Լուս.',submitAd:'Ուղ. մոդ.',viewBtn:'Դիտ.',noAccount:'Հաշ. չկա? Գրանց.',haveAccount:'Կա հաշ.? Մուտք' }
+    };
+    let lang = localStorage.getItem('ma_lang') || 'ru';
+    function setLang(l) { lang=l; localStorage.setItem('ma_lang',l); applyLang(); }
+    function applyLang() {
+        const t=T[lang];
+        document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.dataset.i18n; if(t[k]!==undefined) el.textContent=t[k]; });
+        document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ const k=el.dataset.i18nPh; if(t[k]!==undefined) el.placeholder=t[k]; });
+        document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
+    }
     applyFilters();
     applyLang();
 </script>

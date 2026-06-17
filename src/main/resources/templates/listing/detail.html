@@ -3,95 +3,82 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <title th:text="${car.title}">Детали объявления</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title th:text="${car.title}">Объявление</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .detail-grid { display: grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: start; }
+        .gallery { border-radius: 10px; overflow: hidden; background: #000; }
+        .gallery img { width: 100%; height: 380px; object-fit: contain; display: block; }
+        .thumbs { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .thumbs img { width: 80px; height: 56px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s; }
+        .thumbs img.active { border-color: var(--red); }
+        .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .info-row:last-child { border-bottom: none; }
+        .info-row span:first-child { color: var(--gray); }
+        .info-row span:last-child { font-weight: 600; }
+        .seller-card { background: var(--dark); color: #fff; border-radius: var(--radius); padding: 20px; }
+        .seller-card h4 { font-size: 15px; color: #fbbf24; margin-bottom: 14px; }
+        .seller-phone { font-size: 22px; font-weight: 700; color: #fbbf24; margin: 6px 0 14px; }
+        @media(max-width:760px) { .detail-grid { grid-template-columns: 1fr; } }
+    </style>
 </head>
-<body class="bg-light">
-
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-5">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="/">🚗 MYAUTO</a>
-        <a href="/" class="btn btn-outline-light btn-sm">Назад к списку</a>
-    </div>
+<body>
+<nav class="nav">
+    <a class="nav-brand" href="/"><span>MY</span>AUTO</a>
+    <a href="/" class="btn btn-outline btn-sm">← К списку</a>
 </nav>
 
-<div class="container">
-    <div class="row g-5">
-        <div class="col-lg-7">
-            <div id="carDetailCarousel" class="carousel slide shadow rounded overflow-hidden bg-black" data-bs-ride="false">
-                <div class="carousel-inner" style="height: 450px;">
-                    <div th:if="${#lists.isEmpty(car.images)}" class="carousel-item active h-100">
-                        <img src="https://via.placeholder.com/600x400?text=No+Photo" class="d-block w-100 h-100" style="object-fit: contain;" alt="Нет фото">
-                    </div>
-                    <div th:if="${!#lists.isEmpty(car.images)}" th:each="img, iterStat : ${car.images}"
-                         th:classappend="${iterStat.index == 0} ? 'active'" class="carousel-item h-100">
-                        <img th:src="${img}" class="d-block w-100 h-100" style="object-fit: contain;" alt="Фото автомобиля">
-                    </div>
-                </div>
-                <button th:if="${#lists.size(car.images) > 1}" class="carousel-control-prev" type="button" data-bs-target="#carDetailCarousel" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Назад</span>
-                </button>
-                <button th:if="${#lists.size(car.images) > 1}" class="carousel-control-next" type="button" data-bs-target="#carDetailCarousel" data-bs-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Вперед</span>
-                </button>
+<div class="page-wide" style="margin-top:32px">
+    <div class="detail-grid">
+
+        <!-- Галерея -->
+        <div>
+            <div class="gallery">
+                <img id="mainImg"
+                     th:src="${#lists.isEmpty(car.images)} ? 'https://via.placeholder.com/600x380/e5e7eb/9ca3af?text=Нет+фото' : ${car.images[0]}"
+                     alt="Фото">
+            </div>
+            <div class="thumbs" th:if="${!#lists.isEmpty(car.images)}">
+                <img th:each="img,i : ${car.images}" th:src="${img}" th:classappend="${i.index==0}?'active':''"
+                     onclick="setMain(this)" alt="">
+            </div>
+            <!-- Описание -->
+            <div class="card card-pad" style="margin-top:20px">
+                <p style="font-size:15px;font-weight:700;margin-bottom:10px">Описание</p>
+                <p style="font-size:14px;color:#444;line-height:1.7;white-space:pre-line" th:text="${car.description}"></p>
             </div>
         </div>
 
-        <div class="col-lg-5">
-            <div class="card p-4 shadow-sm border-0 mb-4">
-                <h1 class="fw-bold mb-2" th:text="${car.title}">Заголовок</h1>
-                <h2 class="text-success fw-bold mb-4" th:text="${car.price} + ' $'">Цена</h2>
-
-                <table class="table my-3">
-                    <tr>
-                        <td class="text-muted text-start">Модель автомобиля:</td>
-                        <td class="fw-bold text-end" th:text="${car.carModel}">Модель</td>
-                    </tr>
-                    <tr>
-                        <td class="text-muted text-start">Год выпуска:</td>
-                        <td class="fw-bold text-end" th:text="${car.year}">Год</td>
-                    </tr>
-                    <tr>
-                        <td class="text-muted text-start">Дата размещения:</td>
-                        <td class="fw-bold text-end" th:text="${#temporals.format(car.createdAt, 'dd.MM.yyyy HH:mm')}">Дата</td>
-                    </tr>
-                </table>
+        <!-- Правая колонка -->
+        <div>
+            <div class="card card-pad" style="margin-bottom:16px">
+                <h1 style="font-size:18px;font-weight:700;margin-bottom:8px" th:text="${car.title}"></h1>
+                <p class="price" style="font-size:26px;margin-bottom:16px" th:text="${car.price} + ' $'"></p>
+                <div class="info-row"><span>Модель</span><span th:text="${car.carModel}"></span></div>
+                <div class="info-row"><span>Год</span><span th:text="${car.year}"></span></div>
+                <div class="info-row"><span>Дата</span><span th:text="${#temporals.format(car.createdAt,'dd.MM.yyyy')}"></span></div>
+                <div class="info-row"><span>Продавец</span><span th:text="${car.user.username}"></span></div>
             </div>
 
-            <div class="card p-4 shadow-sm border-0 bg-dark text-white">
-                <h4 class="mb-3 fw-bold text-warning">📞 Контакты продавца</h4>
-                <div class="mb-2">
-                    <span class="text-muted">Продавец:</span>
-                    <strong class="ms-1 text-light fs-5" th:text="${car.user.username}">User</strong>
-                </div>
-                <div>
-                    <span class="text-muted">Телефон:</span>
-                    <div class="fs-4 fw-bold text-warning mt-1" th:text="${car.contactPhone}">+7 XXX XXX XX XX</div>
-                </div>
-                <a th:href="'tel:' + ${car.contactPhone}" class="btn btn-warning w-100 fw-bold mt-3">Позвонить продавцу</a>
-
-                <!-- Кнопка чата: только для авторизованных пользователей, не являющихся продавцом -->
+            <div class="seller-card">
+                <h4>📞 Контакты продавца</h4>
+                <div style="font-size:13px;color:#aaa">Телефон:</div>
+                <div class="seller-phone" th:text="${car.contactPhone}"></div>
+                <a th:href="'tel:' + ${car.contactPhone}" class="btn btn-warn" style="width:100%;text-align:center;margin-bottom:8px">Позвонить</a>
                 <a th:if="${#authentication.name != 'anonymousUser' and #authentication.name != car.user.username}"
                    th:href="@{/chat/{id}(id=${car.id})}"
-                   class="btn btn-primary w-100 fw-bold mt-2">💬 Написать продавцу</a>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mt-5">
-        <div class="col-12">
-            <div class="card p-4 shadow-sm border-0">
-                <h3 class="fw-bold border-bottom pb-3 mb-3">Описание автомобиля</h3>
-                <p class="fs-5 text-secondary" style="white-space: pre-line;" th:text="${car.description}">
-                    Подробное описание от владельца...
-                </p>
+                   class="btn btn-red" style="width:100%;text-align:center">💬 Написать продавцу</a>
             </div>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function setMain(el) {
+        document.getElementById('mainImg').src = el.src;
+        document.querySelectorAll('.thumbs img').forEach(i => i.classList.remove('active'));
+        el.classList.add('active');
+    }
+</script>
 </body>
 </html>
