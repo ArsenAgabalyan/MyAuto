@@ -24,6 +24,10 @@ public class ChatMessage {
 
     private LocalDateTime sentAt = LocalDateTime.now();
 
+    @Column(nullable = false)
+    private boolean isRead = false;
+
+    // Геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -38,4 +42,7 @@ public class ChatMessage {
 
     public LocalDateTime getSentAt() { return sentAt; }
     public void setSentAt(LocalDateTime sentAt) { this.sentAt = sentAt; }
+
+    public boolean isRead() { return isRead; }
+    public void setRead(boolean read) { isRead = read; }
 }

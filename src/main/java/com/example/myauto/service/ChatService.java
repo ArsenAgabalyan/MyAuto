@@ -26,12 +26,12 @@ public class ChatService {
         this.userRepository = userRepository;
     }
 
-    // 1. Получить историю сообщений для конкретного объявления
-    public List<ChatMessage> getMessagesForListing(Long listingId) {
+    @Transactional
+    public List<ChatMessage> getMessagesForListingAndMarkAsRead(Long listingId, String currentUsername) {
+        chatMessageRepository.markMessagesAsRead(listingId, currentUsername);
         return chatMessageRepository.findByListingIdOrderBySentAtAsc(listingId);
     }
 
-    // 2. Сохранить новое сообщение из WebSocket
     @Transactional
     public ChatMessage saveMessage(Long listingId, String username, String content) {
         Listing listing = listingRepository.findById(listingId)
@@ -43,12 +43,20 @@ public class ChatService {
         message.setListing(listing);
         message.setSender(sender);
         message.setContent(content);
+        message.setRead(false);
 
         return chatMessageRepository.save(message);
     }
 
-    // 3. Получить все сообщения пользователя для общего списка диалогов
     public List<ChatMessage> getMessagesForUser(String username) {
         return chatMessageRepository.findAllMyMessages(username);
+    }
+
+    public long getUnreadCount(Long listingId, String currentUsername) {
+        return chatMessageRepository.countUnreadMessages(listingId, currentUsername);
+    }
+
+    public long getTotalUnreadCount(String username) {
+        return chatMessageRepository.countTotalUnreadMessagesForUser(username);
     }
 }

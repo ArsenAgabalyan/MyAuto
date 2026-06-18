@@ -61,6 +61,13 @@
             100% { transform: translateY(0); }
         }
 
+        /* Анимация пульсации красного индикатора */
+        @keyframes badgePulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(255, 255, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        }
+
         .floating-widget-btn {
             position: fixed;
             bottom: 24px;
@@ -76,19 +83,47 @@
             box-shadow: 0 4px 16px rgba(220,38,38,0.3);
             cursor: pointer;
             z-index: 180;
-            /* Бесконечная очень медленная анимация покачивания (4 секунды на цикл) */
             animation: floatAnimation 4s ease-in-out infinite;
-            /* Плавный переход при наведении */
             transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
         }
 
-        /* Эффект при наведении курсора */
         .floating-widget-btn:hover {
             background-color: #b91c1c;
             box-shadow: 0 8px 24px rgba(185,28,28,0.5);
-            /* Приостанавливаем дефолтное покачивание и немного приподнимаем */
             animation-play-state: paused;
             transform: translateY(-5px) scale(1.05);
+        }
+
+        /* СТИЛЬ ЦИФРОВОГО ИНДИКАТОРA НАД КНОПКОЙ */
+        .widget-unread-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background-color: #ffffff;
+            color: #dc2626;
+            font-size: 11px;
+            font-weight: 800;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            border: 2px solid #dc2626;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            animation: badgePulse 1.8s infinite;
+        }
+
+        /* Индикатор непрочитанных внутри строчки списка чатов */
+        .item-unread-dot {
+            background-color: #dc2626;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: auto;
         }
 
         @media(max-width: 700px) { .filter-row { grid-template-columns: 1fr 1fr; } }
@@ -260,6 +295,9 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" viewBox="0 0 16 16">
             <path d="M2 1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h9.586a1 1 0 0 1 .707.293l2.853 2.853V13.5a.5.5 0 0 1 .5-.5h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2zm13-1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-.5a.5.5 0 0 1-.5.5v1.5a.5.5 0 0 1-.854.354L10.146 13H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h13z"/>
         </svg>
+
+        <!-- КРАСНЫЙ ИНДИКАТОР НЕПРОЧИТАННЫХ НАД КНОПКОЙ ЧАТА (Изначально скрыт d-none) -->
+        <div id="unread-main-badge" class="widget-unread-badge d-none">0</div>
     </div>
 
     <!-- Всплывающее окошко списка чатов -->
@@ -334,6 +372,30 @@
         document.getElementById('moreArrow').textContent=open?'▲':'▼';
     }
 
+    // ── ФУНКЦИЯ ОБНОВЛЕНИЯ ОБЩЕГО СЧЕТЧИКА НА КНОПКЕ ──
+    function updateUnreadCounter() {
+        fetch('/api/chat/unread-count')
+            .then(response => {
+                if (!response.ok) throw new Error('Unauthorized or error');
+                return response.json();
+            })
+            .then(data => {
+                const badge = document.getElementById('unread-main-badge');
+                if (badge) {
+                    const count = data.count;
+                    if (count > 0) {
+                        badge.innerText = count;
+                        badge.style.display = 'flex'; // Показываем бейдж с цифрой
+                    } else {
+                        badge.style.display = 'none'; // Скрываем если 0
+                    }
+                }
+            })
+            .catch(err => {
+                // Игнорируем ошибку, если пользователь — анонимный гость
+            });
+    }
+
     // ── СКРИПТ ПЛАВАЮЩЕГО ВИДЖЕТА ЧАТА ──
     function toggleChatWidget() {
         const widget = document.getElementById('chatWidgetBox');
@@ -372,9 +434,19 @@
                     card.onmouseout = () => { card.style.borderColor = '#e2e8f0'; card.style.transform = 'none'; };
 
                     const sellerPrefix = lang === 'en' ? 'Seller' : (lang === 'hy' ? 'Վաճառող' : 'Продавец');
+                    const newMsgSuffix = lang === 'en' ? 'new' : (lang === 'hy' ? 'նոր' : 'новых');
+
+                    // Добавляем внутренний индикатор для каждой строчки, если в ней есть непрочитанные
+                    let badgeHtml = '';
+                    if (item.unreadCount > 0) {
+                        badgeHtml = `<span class="item-unread-dot">+${item.unreadCount} ${newMsgSuffix}</span>`;
+                    }
 
                     card.innerHTML = `
-                        <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.title}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <div style="font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;">${item.title}</div>
+                            ${badgeHtml}
+                        </div>
                         <div style="font-size: 12px; color: #64748b;">${sellerPrefix}: <span style="color: #dc2626; font-weight: 600;">${item.sellerName}</span></div>
                     `;
                     listContainer.appendChild(card);
@@ -391,14 +463,17 @@
         const btn = document.getElementById('chatWidgetBtn');
         if (!btn) return;
 
-        // Добавляем класс легкого сжатия при активном скролле
         btn.style.transform = 'scale(0.92)';
 
         clearTimeout(scrollTimeout);
         scrollTimeout = setTimeout(() => {
-            btn.style.transform = ''; // Возвращаем в исходное состояние, когда скролл прекратился
+            btn.style.transform = '';
         }, 150);
     });
+
+    // Инициализация фоновых проверок при загрузке
+    updateUnreadCounter();
+    setInterval(updateUnreadCounter, 10000); // Раз в 10 секунд проверяем на новые сообщения
 
     // ── i18n ──
     const T = {

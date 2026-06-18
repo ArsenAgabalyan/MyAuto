@@ -34,7 +34,6 @@ public class ChatController {
         this.messagingTemplate = messagingTemplate;
     }
 
-    // 1. Страница чата по конкретному объявлению (Рабочий URL)
     @GetMapping("/chat/{listingId}")
     public String chatPage(@PathVariable("listingId") Long listingId, Model model, Principal principal) {
         if (principal == null) {
@@ -44,7 +43,7 @@ public class ChatController {
         Listing listing = listingRepository.findById(listingId)
                 .orElseThrow(() -> new IllegalArgumentException("Объявление не найдено: " + listingId));
 
-        List<ChatMessage> history = chatService.getMessagesForListing(listingId);
+        List<ChatMessage> history = chatService.getMessagesForListingAndMarkAsRead(listingId, principal.getName());
 
         model.addAttribute("listing", listing);
         model.addAttribute("history", history);
@@ -53,14 +52,11 @@ public class ChatController {
         return "chat";
     }
 
-    // 2. ИСПРАВЛЕНИЕ ОШИБКИ 404: Перехватываем старый URL инициализации чата из detail.html
-    // и мягко перенаправляем пользователя на рабочий URL /chat/{id}
     @GetMapping("/chat/initiate/{listingId}")
     public String initiateChat(@PathVariable("listingId") Long listingId) {
         return "redirect:/chat/" + listingId;
     }
 
-    // 3. Обработка входящих сообщений через WebSocket
     @MessageMapping("/chat/{listingId}")
     public void handleChatMessage(@DestinationVariable("listingId") Long listingId,
                                   @Payload Map<String, String> payload,
@@ -70,10 +66,7 @@ public class ChatController {
         String text = payload.get("content");
         if (text == null || text.trim().isEmpty()) return;
 
-        // Сохранение сообщения в базу данных через сервис
         ChatMessage savedMessage = chatService.saveMessage(listingId, principal.getName(), text);
-
-        // Формирование топика назначения
         String destination = "/topic/chat/" + listingId;
 
         Map<String, Object> messageJson = Map.of(
@@ -82,32 +75,49 @@ public class ChatController {
                 "sentAt", savedMessage.getSentAt().toString()
         );
 
-        // Явное приведение к (Object) убирает неоднозначность методов convertAndSend в Spring
         messagingTemplate.convertAndSend(destination, (Object) messageJson);
     }
 
-    // 4. Страница со списком всех активных диалогов текущего пользователя
     @GetMapping("/chats")
     public String myChatsPage(Model model, Principal principal) {
         if (principal == null) {
             return "redirect:/auth/login";
         }
 
-        List<ChatMessage> allMessages = chatService.getMessagesForUser(principal.getName());
+        String username = principal.getName();
+        List<ChatMessage> allMessages = chatService.getMessagesForUser(username);
 
-        List<Listing> activeListings = allMessages.stream()
+        List<Map<String, Object>> chatListWithNotifications = allMessages.stream()
                 .map(ChatMessage::getListing)
                 .filter(Objects::nonNull)
                 .distinct()
+                .map(listing -> {
+                    long unreadCount = chatService.getUnreadCount(listing.getId(), username);
+                    return Map.of(
+                            "listing", (Object) listing,
+                            "hasUnread", (Object) (unreadCount > 0),
+                            "unreadCount", (Object) unreadCount
+                    );
+                })
                 .toList();
 
-        model.addAttribute("listings", activeListings);
-        model.addAttribute("currentUsername", principal.getName());
+        model.addAttribute("chats", chatListWithNotifications);
+        model.addAttribute("currentUsername", username);
 
         return "chats";
     }
 
-    // 5. REST API Эндпоинт для плавающего виджета истории (возвращает JSON)
+    // НОВЫЙ REST ЭНДПОИНТ ДЛЯ ГЛАВНОЙ СТРАНИЦЫ SAYTA
+    @ResponseBody
+    @GetMapping("/api/chat/unread-count")
+    public Map<String, Long> getTotalUnreadCount(Principal principal) {
+        if (principal == null) {
+            return Map.of("count", 0L);
+        }
+        long count = chatService.getTotalUnreadCount(principal.getName());
+        return Map.of("count", count);
+    }
+
     @ResponseBody
     @GetMapping("/api/chat/my-chats-summary")
     public List<Map<String, Object>> getMyChatsSummary(Principal principal) {
@@ -115,17 +125,22 @@ public class ChatController {
             return List.of();
         }
 
-        List<ChatMessage> allMessages = chatService.getMessagesForUser(principal.getName());
+        String username = principal.getName();
+        List<ChatMessage> allMessages = chatService.getMessagesForUser(username);
 
         return allMessages.stream()
                 .map(ChatMessage::getListing)
                 .filter(Objects::nonNull)
                 .distinct()
-                .map(listing -> Map.of(
-                        "id", (Object) listing.getId(),
-                        "title", (Object) listing.getTitle(),
-                        "sellerName", (Object) listing.getUser().getUsername()
-                ))
+                .map(listing -> {
+                    long unreadCount = chatService.getUnreadCount(listing.getId(), username);
+                    return Map.of(
+                            "id", (Object) listing.getId(),
+                            "title", (Object) listing.getTitle(),
+                            "sellerName", (Object) listing.getUser().getUsername(),
+                            "unreadCount", (Object) unreadCount
+                    );
+                })
                 .toList();
     }
 }
