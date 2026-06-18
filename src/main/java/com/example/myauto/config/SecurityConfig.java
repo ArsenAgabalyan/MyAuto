@@ -16,24 +16,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Отключаем CSRF временно для упрощения работы с формами без токенов.
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
-
-                        // Разрешенные всем страницы
                         .requestMatchers("/", "/auth/login", "/auth/register", "/error").permitAll()
-
-                        // Статика: CSS, JS, изображения, загруженные файлы
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**", "/*.css", "/*.js").permitAll()
-
-                        // ИСПРАВЛЕНО: Разрешаем WebSocket-соединения для работы чата в реальном времени!
                         .requestMatchers("/ws/**").permitAll()
-
-                        // Доступ к URL-адресам админки строго для пользователей с ROLE_ADMIN
                         .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
 
-                        // Все остальные действия (включая переход в сам /chat/**) требуют авторизации
+                        // Доступ к профилю только авторизованным
+                        .requestMatchers("/profile/**").authenticated()
+
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -53,7 +46,6 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // ВНИМАНИЕ: NoOpPasswordEncoder используется только для учебных целей.
         return NoOpPasswordEncoder.getInstance();
     }
 }

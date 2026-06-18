@@ -18,6 +18,7 @@ public class AdminController {
     @GetMapping("/moderation")
     public String moderationPage(Model model) {
         model.addAttribute("pendingCars", listingService.getPendingListings());
+        model.addAttribute("approvedCars", listingService.getApprovedListings()); // Добавляем все одобренные
         return "admin/moderation";
     }
 

@@ -1,6 +1,7 @@
 package com.example.myauto.controller;
 
 import com.example.myauto.entity.Listing;
+import com.example.myauto.entity.Role;
 import com.example.myauto.entity.User;
 import com.example.myauto.repository.UserRepository;
 import com.example.myauto.repository.ListingRepository;
@@ -42,42 +43,59 @@ public class ListingController {
     public String saveListing(@ModelAttribute("listing") Listing listing,
                               @RequestParam("imageFiles") MultipartFile[] files,
                               Principal principal) {
-
-        String username = principal.getName();
-        User currentUser = userRepository.findByUsername(username).orElseThrow();
+        User currentUser = userRepository.findByUsername(principal.getName()).orElseThrow();
         listing.setUser(currentUser);
 
-        String uploadDir = System.getProperty("user.dir") + "/uploads/";
-        File folder = new File(uploadDir);
-        if (!folder.exists()) {
-            folder.mkdirs();
-        }
-
-        for (MultipartFile file : files) {
-            if (!file.isEmpty()) {
-                try {
-                    String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-                    Path path = Paths.get(uploadDir + uniqueFileName);
-
-                    Files.write(path, file.getBytes());
-
-                    listing.getImages().add("/uploads/" + uniqueFileName);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+        handleFiles(listing, files);
 
         listingService.saveListing(listing);
         return "redirect:/?success";
     }
 
-    // НОВЫЙ МЕТОД: Открывает карточку детального просмотра автомобиля по ID
+    @GetMapping("/edit/{id}")
+    public String editListingPage(@PathVariable Long id, Model model, Principal principal) {
+        Listing listing = listingRepository.findById(id).orElseThrow();
+        User currentUser = userRepository.findByUsername(principal.getName()).orElseThrow();
+
+        // Проверка доступа: владелец или админ
+        if (!listing.getUser().getUsername().equals(principal.getName()) && currentUser.getRole() != Role.ROLE_ADMIN) {
+            return "redirect:/";
+        }
+
+        model.addAttribute("listing", listing);
+        model.addAttribute("isAdmin", currentUser.getRole() == Role.ROLE_ADMIN);
+        return "listing/edit";
+    }
+
+    @PostMapping("/edit/{id}")
+    public String updateListing(@PathVariable Long id, @ModelAttribute("listing") Listing listing, Principal principal) {
+        User currentUser = userRepository.findByUsername(principal.getName()).orElseThrow();
+        boolean isAdmin = (currentUser.getRole() == Role.ROLE_ADMIN);
+
+        listingService.updateListing(id, listing, isAdmin);
+
+        return isAdmin ? "redirect:/admin/moderation" : "redirect:/profile?updated";
+    }
+
     @GetMapping("/{id}")
     public String viewListingDetail(@PathVariable("id") Long id, Model model) {
-        Listing car = listingRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Объявление не найдено: " + id));
+        Listing car = listingRepository.findById(id).orElseThrow();
         model.addAttribute("car", car);
         return "listing/detail";
+    }
+
+    private void handleFiles(Listing listing, MultipartFile[] files) {
+        String uploadDir = System.getProperty("user.dir") + "/uploads/";
+        new File(uploadDir).mkdirs();
+
+        for (MultipartFile file : files) {
+            if (!file.isEmpty()) {
+                try {
+                    String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+                    Files.write(Paths.get(uploadDir + uniqueFileName), file.getBytes());
+                    listing.getImages().add("/uploads/" + uniqueFileName);
+                } catch (IOException e) { e.printStackTrace(); }
+            }
+        }
     }
 }

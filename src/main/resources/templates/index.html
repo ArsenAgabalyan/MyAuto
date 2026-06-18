@@ -147,7 +147,10 @@
             <button class="btn btn-red btn-sm" onclick="openModal('registerModal')" data-i18n="register">Регистрация</button>
         </th:block>
         <th:block th:if="${#authentication.name != 'anonymousUser'}">
-            <span class="nav-user">Привет, <strong th:text="${#authentication.name}"></strong></span>
+            <!-- ИЗМЕНЕНО: Ссылка на профиль -->
+            <a href="/profile" class="nav-user" style="text-decoration:none; color: #ccc;">
+                Привет, <strong th:text="${#authentication.name}"></strong> 👤
+            </a>
             <a th:if="${#authorization.expression('hasAuthority(''ROLE_ADMIN'')')}" href="/admin/moderation" class="btn btn-warn btn-sm" data-i18n="moderation">Модерация</a>
             <button class="btn btn-red btn-sm" onclick="openModal('addModal')" data-i18n="sell">+ Продать авто</button>
             <a href="/auth/logout" class="btn btn-outline btn-sm" data-i18n="logout">Выйти</a>
