@@ -5,82 +5,57 @@
     <title>Мои сообщения</title>
     <link rel="stylesheet" href="/style.css">
     <style>
-        body {
-            background-color: #f8fafc;
-            color: #334155;
-            font-family: system-ui, -apple-system, sans-serif;
-            margin: 0; padding: 0;
-        }
-        .nav-custom {
-            background: #ffffff; padding: 16px 24px;
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #e2e8f0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .nav-brand-custom { font-size: 22px; font-weight: 800; color: #1e293b; text-decoration: none; }
-        .nav-brand-custom span { color: #dc2626; }
-        .btn-back {
-            text-decoration: none; color: #475569; background: #ffffff;
-            padding: 8px 16px; border: 1px solid #cbd5e1; border-radius: 8px;
-            font-size: 14px; font-weight: 500;
-        }
-        .container {
-            max-width: 800px; margin: 40px auto; padding: 0 20px;
-        }
+        .container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
         h2 { color: #1e293b; font-size: 24px; font-weight: 700; margin-bottom: 24px; }
-
-        .chats-list {
-            display: flex; flex-direction: column; gap: 16px;
-        }
+        .chats-list { display: flex; flex-direction: column; gap: 16px; }
         .chat-card {
-            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
             padding: 20px; display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); text-decoration: none; color: inherit;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-decoration: none; color: inherit;
             transition: transform 0.2s, border-color 0.2s;
         }
-        .chat-card:hover {
-            transform: translateY(-2px); border-color: #dc2626;
-        }
+        .chat-card:hover { transform: translateY(-2px); border-color: var(--red); }
         .chat-info { display: flex; flex-direction: column; gap: 4px; }
         .chat-title { font-size: 18px; font-weight: 700; color: #1e293b; }
-        .chat-seller { font-size: 14px; color: #64748b; }
-        .chat-seller span { color: #dc2626; font-weight: 600; }
-
+        .chat-user { font-size: 14px; color: #64748b; }
         .btn-open-chat {
-            background: #dc2626; color: white; border: none; padding: 10px 20px;
+            background: var(--red); color: white; border: none; padding: 10px 20px;
             border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none;
         }
         .empty-state {
-            text-align: center; color: #94a3b8; padding: 60px 20px; background: white; border-radius: 12px; border: 1px solid #e2e8f0;
+            text-align: center; color: #94a3b8; padding: 60px 20px;
+            background: white; border-radius: 12px; border: 1px solid #e2e8f0;
         }
     </style>
 </head>
 <body>
 
-<nav class="nav-custom">
-    <a class="nav-brand-custom" href="/"><span>MY</span>AUTO</a>
-    <a href="/" class="btn-back">← На главную</a>
+<nav class="nav">
+    <a class="nav-brand" href="/"><span>MY</span>AUTO</a>
+    <a href="/" class="btn btn-outline btn-sm">← На главную</a>
 </nav>
 
 <div class="container">
     <h2>💬 Мои диалоги</h2>
 
     <div class="chats-list">
-        <!-- Если чатов нет -->
-        <div th:if="${#lists.isEmpty(listings)}" class="empty-state">
-            <p style="font-size: 18px; margin: 0 0 8px 0; font-weight: 600;">У вас пока нет сообщений</p>
-            <p style="font-size: 14px; margin: 0;">Когда вам напишут по поводу объявлений или вы напишете кому-то, диалоги появятся здесь.</p>
+        <div th:if="${#lists.isEmpty(rooms)}" class="empty-state">
+            <p style="font-size:18px;margin:0 0 8px 0;font-weight:600;">У вас пока нет сообщений</p>
+            <p style="font-size:14px;margin:0;">Когда вам напишут по поводу объявлений или вы напишете кому-то, диалоги появятся здесь.</p>
         </div>
 
-        <!-- Перебор доступных диалогов -->
-        <a th:each="listing : ${listings}" th:href="@{/chat/{id}(id=${listing.id})}" class="chat-card">
+        <a th:each="room : ${rooms}" th:href="@{/chat/{id}(id=${room.id})}" class="chat-card">
             <div class="chat-info">
-                <div class="chat-title" th:text="${listing.title}"></div>
-                <div class="chat-seller">
-                    Владелец авто: <span th:text="${listing.user.username}"></span>
+                <div class="chat-title" th:text="${room.listing.title}">Марка Модель</div>
+                <div class="chat-user">
+                    💬 Собеседник:
+                    <span style="font-weight: 600; color: var(--red);"
+                          th:text="${room.buyer.username == currentUsername ? room.seller.username : room.buyer.username}">
+                        User
+                    </span>
                 </div>
             </div>
-            <div class="btn-open-chat">Открыть чат</div>
+            <span class="btn-open-chat">Открыть чат →</span>
         </a>
     </div>
 </div>

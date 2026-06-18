@@ -6,9 +6,6 @@
     <link rel="stylesheet" href="/style.css">
     <style>
         /* ── NAV ── */
-        .lang-btn { background: transparent; border: 1px solid rgba(255,255,255,0.25); color: rgba(255,255,255,0.8); border-radius: 5px; padding: 3px 9px; font-size: 12px; font-weight: 700; cursor: pointer; letter-spacing: 0.5px; }
-        .lang-btn:hover, .lang-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
-
         /* ── FILTER BAR ── */
         .filter-bar { background: #fff; border-bottom: 1px solid var(--border); padding: 14px 20px; }
         .filter-inner { max-width: 1040px; margin: 0 auto; }
@@ -101,35 +98,32 @@
 <body>
 
 <!-- NAV -->
-<nav class="nav" style="position:sticky;top:0;z-index:150">
+<nav class="nav">
     <a class="nav-brand" href="/"><span>MY</span>AUTO</a>
     <div class="nav-links">
-        <span th:if="${param.success}" class="success-notice">✓ Объявление на модерации</span>
-
         <div style="display:flex;gap:4px">
             <button class="lang-btn" onclick="setLang('ru')" data-lang="ru">RU</button>
             <button class="lang-btn" onclick="setLang('en')" data-lang="en">EN</button>
             <button class="lang-btn" onclick="setLang('hy')" data-lang="hy">HY</button>
         </div>
-
-        <div style="width:1px;height:20px;background:rgba(255,255,255,0.15)"></div>
-
-        <!-- Гость -->
+        <div class="nav-divider"></div>
         <th:block th:if="${#authentication.name == 'anonymousUser'}">
             <button class="btn btn-outline btn-sm" onclick="openModal('loginModal')" data-i18n="login">Войти</button>
             <button class="btn btn-red btn-sm" onclick="openModal('registerModal')" data-i18n="register">Регистрация</button>
         </th:block>
-
-        <!-- Авторизован -->
         <th:block th:if="${#authentication.name != 'anonymousUser'}">
             <span class="nav-user">Привет, <strong th:text="${#authentication.name}"></strong></span>
-            <a th:if="${#authorization.expression('hasAuthority(''ROLE_ADMIN'')')}"
-               href="/admin/moderation" class="btn btn-warn btn-sm" data-i18n="moderation">Модерация</a>
+            <a th:if="${#authorization.expression('hasAuthority(''ROLE_ADMIN'')')}" href="/admin/moderation" class="btn btn-warn btn-sm" data-i18n="moderation">Модерация</a>
             <button class="btn btn-red btn-sm" onclick="openModal('addModal')" data-i18n="sell">+ Продать авто</button>
             <a href="/auth/logout" class="btn btn-outline btn-sm" data-i18n="logout">Выйти</a>
         </th:block>
     </div>
 </nav>
+
+<!-- Уведомление об успешной публикации -->
+<div th:if="${param.success}" style="background:#1e293b;color:#fbbf24;text-align:center;padding:8px;font-size:13px;font-weight:600;">
+    ✓ Объявление отправлено на модерацию
+</div>
 
 <!-- FILTER BAR -->
 <div class="filter-bar">

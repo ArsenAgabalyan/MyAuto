@@ -31,7 +31,7 @@ public class ChatService {
         return chatMessageRepository.findByListingIdOrderBySentAtAsc(listingId);
     }
 
-    // 2. Сохранить новое сообщение (используется WebSocket-контроллером)
+    // 2. Сохранить новое сообщение из WebSocket
     @Transactional
     public ChatMessage saveMessage(Long listingId, String username, String content) {
         Listing listing = listingRepository.findById(listingId)

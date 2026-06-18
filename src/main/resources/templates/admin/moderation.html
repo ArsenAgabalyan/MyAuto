@@ -6,10 +6,12 @@
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+
 <nav class="nav">
     <a class="nav-brand" href="/"><span>MY</span>AUTO</a>
     <a href="/" class="btn btn-outline btn-sm">На главную</a>
 </nav>
+
 <div class="page-wide">
     <p class="page-title">Модерация объявлений</p>
 
@@ -35,7 +37,8 @@
                 <td style="font-weight:600" th:text="${car.title}"></td>
                 <td><span th:text="${car.carModel}"></span> <span class="tag" th:text="'('+${car.year}+')'"></span></td>
                 <td class="price" th:text="${car.price}+' $'"></td>
-                <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#555" th:text="${car.description}"></td>
+                <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#555"
+                    th:text="${car.description}"></td>
                 <td th:text="${car.user.username}"></td>
                 <td>
                     <div style="display:flex;gap:6px">
@@ -52,5 +55,6 @@
         </table>
     </div>
 </div>
+
 </body>
 </html>
