@@ -69,10 +69,14 @@ public class ListingController {
     @PostMapping("/edit/{id}")
     public String updateListing(@PathVariable Long id, @ModelAttribute("listing") Listing updatedData, Principal principal) {
         User currentUser = userRepository.findByUsername(principal.getName()).orElseThrow();
-        boolean isAdmin = (currentUser.getRole() == Role.ROLE_ADMIN);
-
-        // Вся логика из Service теперь здесь:
         Listing listing = listingRepository.findById(id).orElseThrow();
+
+        // Проверка прав: обновить может только владелец или администратор
+        if (!listing.getUser().getUsername().equals(principal.getName()) && currentUser.getRole() != Role.ROLE_ADMIN) {
+            return "redirect:/";
+        }
+
+        boolean isAdmin = (currentUser.getRole() == Role.ROLE_ADMIN);
 
         listing.setTitle(updatedData.getTitle());
         listing.setCarModel(updatedData.getCarModel());

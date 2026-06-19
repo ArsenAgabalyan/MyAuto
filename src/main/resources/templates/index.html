@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyAuto — Продажа автомобилей</title>
     <link rel="stylesheet" href="/style.css">
     <style>
@@ -38,8 +39,7 @@
         .car-desc { font-size: 13px; color: var(--gray); margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .car-meta { display: flex; gap: 14px; font-size: 12px; color: var(--gray); margin-bottom: 12px; }
         .car-foot { display: flex; align-items: center; justify-content: space-between; }
-        .btn-view { background: var(--red); color: #fff; border: none; border-radius: 7px; padding: 8px 18px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
-        .btn-view:hover { background: var(--red2); color: #fff; }
+
         .no-results { text-align: center; padding: 60px 0; color: var(--gray); }
         .no-results .icon { font-size: 40px; margin-bottom: 12px; }
 
@@ -123,19 +123,21 @@
             font-weight: 700;
             padding: 2px 8px;
             border-radius: 12px;
-            margin-left: auto;
         }
-
-        @media(max-width: 700px) { .filter-row { grid-template-columns: 1fr 1fr; } }
-        @media(max-width: 400px) { .filter-row { grid-template-columns: 1fr; } }
     </style>
+
 </head>
 <body>
 
 <!-- NAV -->
 <nav class="nav">
     <a class="nav-brand" href="/"><span>MY</span>AUTO</a>
-    <div class="nav-links">
+    <button class="nav-toggle" onclick="toggleMobileMenu()" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    <div class="nav-links mobile-collapsed">
         <div style="display:flex;gap:4px">
             <button class="lang-btn" onclick="setLang('ru')" data-lang="ru">RU</button>
             <button class="lang-btn" onclick="setLang('en')" data-lang="en">EN</button>
@@ -477,6 +479,10 @@
     // Инициализация фоновых проверок при загрузке
     updateUnreadCounter();
     setInterval(updateUnreadCounter, 10000); // Раз в 10 секунд проверяем на новые сообщения
+
+    function toggleMobileMenu() {
+        document.querySelector('.nav').classList.toggle('mobile-open');
+    }
 
     // ── i18n ──
     const T = {
