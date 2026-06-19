@@ -1,8 +1,10 @@
 package com.example.myauto.controller;
 
+import com.example.myauto.entity.Listing;
+import com.example.myauto.entity.Role;
 import com.example.myauto.entity.User;
+import com.example.myauto.repository.ListingRepository;
 import com.example.myauto.repository.UserRepository;
-import com.example.myauto.service.ListingService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,32 +18,43 @@ import java.security.Principal;
 @RequestMapping("/profile")
 public class ProfileController {
 
-    private final ListingService listingService;
+    private final ListingRepository listingRepository;
     private final UserRepository userRepository;
 
-    public ProfileController(ListingService listingService, UserRepository userRepository) {
-        this.listingService = listingService;
+    public ProfileController(ListingRepository listingRepository, UserRepository userRepository) {
+        this.listingRepository = listingRepository;
         this.userRepository = userRepository;
     }
 
     @GetMapping
     public String profilePage(Model model, Principal principal) {
-        if (principal == null) return "redirect:/auth/login";
+        if (principal == null) {
+            return "redirect:/auth/login";
+        }
 
-        User user = userRepository.findByUsername(principal.getName()).orElseThrow();
-        model.addAttribute("myCars", listingService.getListingsByUser(user));
+        User user = userRepository.findByUsername(principal.getName())
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+
+        // Берем машины пользователя напрямую из базы данных
+        model.addAttribute("myCars", listingRepository.findAllByUserOrderByCreatedAtDesc(user));
         return "profile";
     }
 
     @PostMapping("/listings/{id}/delete")
     public String deleteMyListing(@PathVariable Long id, Principal principal) {
-        if (principal == null) return "redirect:/auth/login";
+        if (principal == null) {
+            return "redirect:/auth/login";
+        }
 
-        // ТЕПЕРЬ ПЕРЕДАЕМ 3 ПАРАМЕТРА:
-        // 1. id объявления
-        // 2. имя пользователя
-        // 3. false (так как обычный пользователь не админ)
-        listingService.deleteUserListing(id, principal.getName(), false);
+        Listing listing = listingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Объявление не найдено"));
+        User currentUser = userRepository.findByUsername(principal.getName())
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+
+        // Удалить может либо владелец машины, либо администратор
+        if (currentUser.getRole() == Role.ROLE_ADMIN || listing.getUser().getUsername().equals(principal.getName())) {
+            listingRepository.delete(listing);
+        }
 
         return "redirect:/profile?deleted";
     }

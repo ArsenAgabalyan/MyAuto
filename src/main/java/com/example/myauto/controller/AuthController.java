@@ -1,7 +1,8 @@
 package com.example.myauto.controller;
 
+import com.example.myauto.entity.Role;
 import com.example.myauto.entity.User;
-import com.example.myauto.service.UserService;
+import com.example.myauto.repository.UserRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,10 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final UserService userService;
+    private final UserRepository userRepository;
 
-    public AuthController(UserService userService) {
-        this.userService = userService;
+    public AuthController(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     @GetMapping("/login")
@@ -32,7 +33,11 @@ public class AuthController {
 
     @PostMapping("/register")
     public String registerUser(@ModelAttribute("user") User user) {
-        userService.registerUser(user);
+        // Устанавливаем базовую роль пользователя (раньше это делал UserService)
+        user.setRole(Role.ROLE_USER);
+
+        // Сохраняем напрямую в базу
+        userRepository.save(user);
         return "redirect:/auth/login";
     }
 }

@@ -1,11 +1,11 @@
 package com.example.myauto.controller;
 
 import com.example.myauto.entity.Listing;
+import com.example.myauto.entity.ListingStatus;
 import com.example.myauto.entity.Role;
 import com.example.myauto.entity.User;
 import com.example.myauto.repository.UserRepository;
 import com.example.myauto.repository.ListingRepository;
-import com.example.myauto.service.ListingService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Principal;
 import java.util.UUID;
@@ -23,12 +22,11 @@ import java.util.UUID;
 @RequestMapping("/listings")
 public class ListingController {
 
-    private final ListingService listingService;
+    // Заметь: ListingService больше нет, работаем напрямую с базой
     private final UserRepository userRepository;
     private final ListingRepository listingRepository;
 
-    public ListingController(ListingService listingService, UserRepository userRepository, ListingRepository listingRepository) {
-        this.listingService = listingService;
+    public ListingController(UserRepository userRepository, ListingRepository listingRepository) {
         this.userRepository = userRepository;
         this.listingRepository = listingRepository;
     }
@@ -48,7 +46,8 @@ public class ListingController {
 
         handleFiles(listing, files);
 
-        listingService.saveListing(listing);
+        // Сохраняем напрямую в репозиторий
+        listingRepository.save(listing);
         return "redirect:/?success";
     }
 
@@ -68,11 +67,29 @@ public class ListingController {
     }
 
     @PostMapping("/edit/{id}")
-    public String updateListing(@PathVariable Long id, @ModelAttribute("listing") Listing listing, Principal principal) {
+    public String updateListing(@PathVariable Long id, @ModelAttribute("listing") Listing updatedData, Principal principal) {
         User currentUser = userRepository.findByUsername(principal.getName()).orElseThrow();
         boolean isAdmin = (currentUser.getRole() == Role.ROLE_ADMIN);
 
-        listingService.updateListing(id, listing, isAdmin);
+        // Вся логика из Service теперь здесь:
+        Listing listing = listingRepository.findById(id).orElseThrow();
+
+        listing.setTitle(updatedData.getTitle());
+        listing.setCarModel(updatedData.getCarModel());
+        listing.setYear(updatedData.getYear());
+        listing.setPrice(updatedData.getPrice());
+        listing.setContactPhone(updatedData.getContactPhone());
+        listing.setDescription(updatedData.getDescription());
+
+        // Если правит не админ — отправляем на модерацию
+        if (!isAdmin) {
+            listing.setStatus(ListingStatus.PENDING);
+        } else {
+            listing.setStatus(ListingStatus.APPROVED);
+        }
+
+        // Сохраняем изменения напрямую
+        listingRepository.save(listing);
 
         return isAdmin ? "redirect:/admin/moderation" : "redirect:/profile?updated";
     }
@@ -82,6 +99,30 @@ public class ListingController {
         Listing car = listingRepository.findById(id).orElseThrow();
         model.addAttribute("car", car);
         return "listing/detail";
+    }
+
+    // Я добавил сюда методы удаления и одобрения, которые были в сервисе,
+    // чтобы они не потерялись. Позже мы привяжем их к кнопкам админа/профиля.
+    @PostMapping("/delete/{id}")
+    public String deleteListing(@PathVariable Long id, Principal principal) {
+        User currentUser = userRepository.findByUsername(principal.getName()).orElseThrow();
+        Listing listing = listingRepository.findById(id).orElseThrow();
+
+        if (currentUser.getRole() == Role.ROLE_ADMIN || listing.getUser().getUsername().equals(principal.getName())) {
+            listingRepository.delete(listing);
+        }
+        return "redirect:/profile?deleted";
+    }
+
+    @PostMapping("/approve/{id}")
+    public String approveListing(@PathVariable Long id, Principal principal) {
+        User currentUser = userRepository.findByUsername(principal.getName()).orElseThrow();
+        if (currentUser.getRole() == Role.ROLE_ADMIN) {
+            Listing listing = listingRepository.findById(id).orElseThrow();
+            listing.setStatus(ListingStatus.APPROVED);
+            listingRepository.save(listing);
+        }
+        return "redirect:/admin/moderation";
     }
 
     private void handleFiles(Listing listing, MultipartFile[] files) {
