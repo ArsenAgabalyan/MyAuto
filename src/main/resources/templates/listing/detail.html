@@ -53,18 +53,60 @@
                         <td class="lbl">Год выпуска</td>
                         <td class="val" th:text="${car.year}">2020</td>
                     </tr>
+                    <tr th:if="${car.mileage != null}">
+                        <td class="lbl">Пробег</td>
+                        <td class="val" th:text="${#numbers.formatDecimal(car.mileage, 0, 'WHITESPACE', 0, 'POINT')} + ' км'">0 км</td>
+                    </tr>
+                    <tr>
+                        <td class="lbl">Состояние</td>
+                        <td class="val" th:text="${car.notBeaten} ? 'Не битое' : 'Битое'">Не битое</td>
+                    </tr>
+                    <tr>
+                        <td class="lbl">ГБО</td>
+                        <td class="val" th:text="${car.gasEquipment} ? 'Установлено' : 'Не установлено'">Не установлено</td>
+                    </tr>
+                    <tr th:if="${car.steeringWheel != null}">
+                        <td class="lbl">Руль</td>
+                        <td class="val" th:text="${car.steeringWheel == 'LEFT'} ? 'Слева' : 'Справа'">Слева</td>
+                    </tr>
+                    <tr>
+                        <td class="lbl">Расценка</td>
+                        <td class="val" th:text="${car.pricing} ? 'Да' : 'Нет'">Нет</td>
+                    </tr>
+                    <tr>
+                        <td class="lbl">Возможен обмен</td>
+                        <td class="val" th:text="${car.exchange} ? 'Да' : 'Нет'">Нет</td>
+                    </tr>
                     <tr>
                         <td class="lbl">Продавец</td>
                         <td class="val" th:text="${car.user.username}">user</td>
                     </tr>
                 </table>
 
+                <div class="specs-badges" style="display:flex; flex-wrap:wrap; gap:8px; margin-top: 12px; margin-bottom: 4px;">
+                    <span th:if="${car.notPainted}" style="background:#e0f2fe; color:#0369a1; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700;">✓ Не крашена</span>
+                    <span th:if="${car.owner}" style="background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700;">✓ Собственник</span>
+                    <span th:if="${car.serviceBook}" style="background:#fef9c3; color:#a16207; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700;">✓ Сервисная книжка</span>
+                    <span th:if="${car.oneOwner}" style="background:#f3e8ff; color:#6b21a8; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700;">✓ Один владелец</span>
+                    <span th:if="${car.originalMileage}" style="background:#ecfdf5; color:#047857; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700;">✓ Оригинальный пробег</span>
+                    <span th:if="${car.garageStorage}" style="background:#fff7ed; color:#c2410c; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700;">✓ Гаражное хранение</span>
+                    <span th:if="${car.keysSet}" style="background:#f0fdf4; color:#166534; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700;">✓ Полный комплект ключей</span>
+                    <span th:if="${car.onWarranty}" style="background:#eff6ff; color:#1e40af; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700;">✓ На гарантии</span>
+                    <span th:if="${car.noAccidents}" style="background:#ecfdf5; color:#065f46; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700;">✓ Без ДТП</span>
+                    <span th:if="${car.dealerServiced}" style="background:#fdf2f8; color:#9d174d; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700;">✓ Обслуживалась у дилера</span>
+                    <span th:if="${car.customsCleared}" style="background:#f0fdfa; color:#0f766e; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700;">✓ Растаможена</span>
+                    <span th:if="${car.negotiable}" style="background:#fef2f2; color:#991b1b; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700;">✓ Возможен торг</span>
+                    <span th:if="${car.noExchange}" style="background:#f1f5f9; color:#334155; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700;">✓ Обмен не интересует</span>
+                    <span th:if="${car.urgentSale}" style="background:#fff1f2; color:#be123c; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700;">⚡ Срочная продажа</span>
+                </div>
+
                 <div style="background: #fff1f2; border: 1px solid #ffe4e6; padding: 12px 16px; border-radius: 8px; margin-top: 4px;">
                     <span style="font-size:12px;color:#9f1239;display:block;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Телефон продавца</span>
                     <a th:href="'tel:' + ${car.contactPhone}" style="font-size:18px;font-weight:700;color:#e31e24;text-decoration:none;" th:text="${car.contactPhone}">+374 XX XX XX</a>
                 </div>
 
-                <a th:href="@{/chat/initiate/{id}(id=${car.id})}" class="btn btn-red btn-lg" style="width:100%;text-align:center;margin-top:8px">💬 Написать продавцу</a>
+                <a th:if="${#authentication.name != car.user.username}" th:href="@{/chat/initiate/{id}(id=${car.id})}" class="btn btn-red btn-lg" style="width:100%;text-align:center;margin-top:8px">💬 Написать продавцу</a>
+                <a th:if="${#authentication.name != 'anonymousUser' and #authentication.name == car.user.username}" th:href="@{/listings/edit/{id}(id=${car.id})}" class="btn btn-lg" style="width:100%;text-align:center;margin-top:8px;background:var(--dark);color:#fff;box-shadow:0 4px 12px rgba(15,23,42,0.15);transition:var(--transition);" onmouseover="this.style.background='#1e293b';this.style.transform='translateY(-1px)';" onmouseout="this.style.background='var(--dark)';this.style.transform='none';">✏️ Редактировать объявление</a>
             </div>
         </div>
 
@@ -76,7 +118,10 @@
         <span>💬 Мои сообщения</span>
     </button>
     <div class="widget-popup" id="chatPopup">
-        <div class="widget-header">Активные диалоги</div>
+        <div class="widget-header">
+            <span>Активные диалоги</span>
+            <span class="widget-close" onclick="toggleWidget()">&times;</span>
+        </div>
         <div class="widget-list" id="widgetList">
             <div style="text-align:center;color:#94a3b8;padding:20px 0;font-size:13px;">Загрузка...</div>
         </div>

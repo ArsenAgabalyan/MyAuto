@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Редактировать — MyAuto</title>
     <link rel="stylesheet" href="/style.css">
+    <style>
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 500px) {
+            .specs-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -13,49 +26,588 @@
     <a th:href="${isAdmin ? '/admin/moderation' : '/profile'}" class="btn btn-outline btn-sm">← Назад</a>
 </nav>
 
-<div class="page" style="max-width:580px;margin-top:40px">
+<div class="page" style="max-width:580px;margin-top:10px">
     <p class="page-title">Редактирование объявления</p>
     <div class="card card-pad">
-        <form th:action="@{/listings/edit/{id}(id=${listing.id})}" th:object="${listing}" method="post">
-            <div class="field">
-                <label>Заголовок</label>
-                <input type="text" th:field="*{title}" required>
+        
+        <!-- Stepper Indicator Header -->
+        <div class="wizard-stepper">
+            <div class="step-indicator active" id="stepIndicator1">
+                <div class="step-num">1</div>
+                <div class="step-label">Инфо</div>
             </div>
-            <div class="row2">
-                <div class="field">
-                    <label>Модель</label>
-                    <input type="text" th:field="*{carModel}" required>
-                </div>
-                <div class="field">
-                    <label>Год выпуска</label>
-                    <input type="number" th:field="*{year}" required>
-                </div>
+            <div class="step-line"></div>
+            <div class="step-indicator" id="stepIndicator2">
+                <div class="step-num">2</div>
+                <div class="step-label">Фото</div>
             </div>
-            <div class="row2">
-                <div class="field">
-                    <label>Цена ($)</label>
-                    <input type="number" step="0.01" th:field="*{price}" required>
-                </div>
-                <div class="field">
-                    <label>Телефон для связи</label>
-                    <input type="text" th:field="*{contactPhone}" required>
-                </div>
+            <div class="step-line"></div>
+            <div class="step-indicator" id="stepIndicator3">
+                <div class="step-num">3</div>
+                <div class="step-label">Характеристики</div>
             </div>
-            <div class="field">
-                <label>Описание</label>
-                <textarea th:field="*{description}" rows="4" required></textarea>
+        </div>
+
+        <form th:action="@{/listings/edit/{id}(id=${listing.id})}" th:object="${listing}" method="post" enctype="multipart/form-data" id="wizardForm">
+            
+            <!-- STEP 1: GENERAL INFO -->
+            <div class="wizard-step active" id="step1">
+                <div class="field">
+                    <label>Заголовок</label>
+                    <input type="text" th:field="*{title}" placeholder="Например: Toyota Camry 2020 в отличном состоянии" required autocomplete="off">
+                </div>
+                <div class="row2">
+                    <div class="field">
+                        <label>Модель</label>
+                        <input type="text" th:field="*{carModel}" placeholder="Camry V70" required autocomplete="off">
+                    </div>
+                    <div class="field">
+                        <label>Год выпуска</label>
+                        <input type="text" inputmode="numeric" th:field="*{year}" placeholder="2020" required autocomplete="off">
+                    </div>
+                </div>
+                <div class="row2">
+                    <div class="field">
+                        <label>Цена ($)</label>
+                        <input type="text" inputmode="decimal" th:field="*{price}" placeholder="18500" required autocomplete="off">
+                    </div>
+                    <div class="field">
+                        <label>Телефон для связи</label>
+                        <input type="text" th:field="*{contactPhone}" placeholder="+374 XX XXX XXX" required autocomplete="off">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Описание</label>
+                    <textarea th:field="*{description}" rows="4" placeholder="Состояние, пробег, комплектация..." required></textarea>
+                </div>
+                <div class="wizard-nav-buttons">
+                    <a th:href="${isAdmin ? '/admin/moderation' : '/profile'}" class="btn btn-ghost" style="flex:1;text-align:center">Отмена</a>
+                    <button type="button" class="btn btn-red" id="step1NextBtn" onclick="nextStep()" style="flex:2" disabled>Далее</button>
+                </div>
             </div>
 
-            <p th:if="${!isAdmin}" style="font-size: 12px; color: var(--red); margin-bottom: 15px;">
-                * После сохранения объявление снова отправится на модерацию.
-            </p>
-
-            <div style="display:flex;gap:10px;">
-                <button type="submit" class="btn btn-red" style="flex:1">Сохранить изменения</button>
+            <!-- STEP 2: PHOTOS UPLOAD -->
+            <div class="wizard-step" id="step2">
+                <div class="field">
+                    <label>Фотографии автомобиля</label>
+                    <div class="file-upload-box" id="dropZone">
+                        <span class="upload-icon">📁</span>
+                        <span class="upload-text">Перетащите фотографии сюда или нажмите для выбора (макс. 10 фото JPG/PNG, до 10 МБ каждое)</span>
+                        <input type="file" id="imageFilesInput" name="imageFiles" multiple accept=".jpg,.jpeg,.png,image/jpeg,image/png" style="display:none">
+                    </div>
+                    
+                    <div id="imagePreviewContainer" class="image-preview-container">
+                        <!-- Existing Images -->
+                        <div class="preview-img-wrapper" th:each="imgUrl : ${listing.images}">
+                            <img th:src="${imgUrl}" alt="Preview">
+                            <!-- Hidden input binds remaining images to list -->
+                            <input type="hidden" name="images" th:value="${imgUrl}">
+                            <button type="button" class="remove-preview-btn" onclick="removeExistingFile(this)">×</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="progress-bar-container" id="progressBarContainer" style="display:none">
+                        <div class="progress-bar-label">
+                            <span>Загрузка и оптимизация...</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar-track">
+                            <div class="progress-bar-fill" id="progressBarFill"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-nav-buttons">
+                    <button type="button" class="btn btn-ghost" onclick="prevStep()" style="flex:1">← Назад</button>
+                    <button type="button" class="btn btn-red" id="step2NextBtn" onclick="nextStep()" style="flex:2">Далее</button>
+                </div>
             </div>
+
+            <!-- STEP 3: OPTIONS CHECKBOX CARDS -->
+            <div class="wizard-step" id="step3">
+                <h3 style="font-size:16px; font-weight:700; margin-bottom:16px; color:var(--dark);">Характеристики автомобиля</h3>
+                
+                <!-- Mileage Input -->
+                <div class="field" style="margin-bottom:16px;">
+                    <label>Пробег *</label>
+                    <div style="position:relative; display:flex; align-items:center;">
+                        <input type="text" id="mileage" th:field="*{mileage}" placeholder="Например: 50000" required autocomplete="off" style="padding-right:45px; width:100%;">
+                        <span style="position:absolute; right:16px; font-weight:700; color:#64748b; font-size:13px; pointer-events:none;">КМ</span>
+                    </div>
+                </div>
+
+                <!-- Current Condition Radio Buttons -->
+                <label style="font-size:13px; font-weight:600; color:var(--dark); display:block; margin-top:12px;">Текущее состояние *</label>
+                <div class="selector-group">
+                    <label style="flex:1">
+                        <input type="radio" th:field="*{notBeaten}" value="true" required>
+                        <div class="selector-btn">Не битое</div>
+                    </label>
+                    <label style="flex:1">
+                        <input type="radio" th:field="*{notBeaten}" value="false" required>
+                        <div class="selector-btn">Битое</div>
+                    </label>
+                </div>
+
+                <!-- Gas Equipment Radio Buttons -->
+                <label style="font-size:13px; font-weight:600; color:var(--dark); display:block; margin-top:12px;">Газобаллонное оборудование *</label>
+                <div class="selector-group">
+                    <label style="flex:1">
+                        <input type="radio" th:field="*{gasEquipment}" value="false" required>
+                        <div class="selector-btn">Не установлено</div>
+                    </label>
+                    <label style="flex:1">
+                        <input type="radio" th:field="*{gasEquipment}" value="true" required>
+                        <div class="selector-btn">Установлено</div>
+                    </label>
+                </div>
+
+                <!-- Steering Wheel Radio Buttons -->
+                <label style="font-size:13px; font-weight:600; color:var(--dark); display:block; margin-top:12px;">Руль *</label>
+                <div class="selector-group">
+                    <label style="flex:1">
+                        <input type="radio" th:field="*{steeringWheel}" value="LEFT" required>
+                        <div class="selector-btn">Слева</div>
+                    </label>
+                    <label style="flex:1">
+                        <input type="radio" th:field="*{steeringWheel}" value="RIGHT" required>
+                        <div class="selector-btn">Справа</div>
+                    </label>
+                </div>
+
+                <!-- Pricing Radio Buttons -->
+                <label style="font-size:13px; font-weight:600; color:var(--dark); display:block; margin-top:12px;">Расценка *</label>
+                <div class="selector-group">
+                    <label style="flex:1">
+                        <input type="radio" th:field="*{pricing}" value="true" required>
+                        <div class="selector-btn">Да</div>
+                    </label>
+                    <label style="flex:1">
+                        <input type="radio" th:field="*{pricing}" value="false" required>
+                        <div class="selector-btn">Нет</div>
+                    </label>
+                </div>
+
+                <!-- Exchange Radio Buttons -->
+                <label style="font-size:13px; font-weight:600; color:var(--dark); display:block; margin-top:12px;">Возможен обмен *</label>
+                <div class="selector-group">
+                    <label style="flex:1">
+                        <input type="radio" th:field="*{exchange}" value="true" required>
+                        <div class="selector-btn">Да</div>
+                    </label>
+                    <label style="flex:1">
+                        <input type="radio" th:field="*{exchange}" value="false" required>
+                        <div class="selector-btn">Нет</div>
+                    </label>
+                </div>
+
+                <!-- Checkboxes Grid -->
+                <label style="margin-top:20px; margin-bottom:14px; display:block; font-weight:700; font-size:14px; color:var(--dark);">Дополнительно:</label>
+                <div class="specs-grid">
+                    <label class="spec-card">
+                        <input type="checkbox" th:field="*{notPainted}" style="display:none">
+                        <span class="spec-card-check">✓</span>
+                        <span class="spec-card-label">Не крашена</span>
+                    </label>
+                    <label class="spec-card">
+                        <input type="checkbox" th:field="*{owner}" style="display:none">
+                        <span class="spec-card-check">✓</span>
+                        <span class="spec-card-label">Я собственник</span>
+                    </label>
+                    <label class="spec-card">
+                        <input type="checkbox" th:field="*{serviceBook}" style="display:none">
+                        <span class="spec-card-check">✓</span>
+                        <span class="spec-card-label">Сервисная книжка</span>
+                    </label>
+                    <label class="spec-card">
+                        <input type="checkbox" th:field="*{oneOwner}" style="display:none">
+                        <span class="spec-card-check">✓</span>
+                        <span class="spec-card-label">Один владелец</span>
+                    </label>
+                    <label class="spec-card">
+                        <input type="checkbox" th:field="*{originalMileage}" style="display:none">
+                        <span class="spec-card-check">✓</span>
+                        <span class="spec-card-label">Оригинальный пробег</span>
+                    </label>
+                    <label class="spec-card">
+                        <input type="checkbox" th:field="*{garageStorage}" style="display:none">
+                        <span class="spec-card-check">✓</span>
+                        <span class="spec-card-label">Гаражное хранение</span>
+                    </label>
+                    <label class="spec-card">
+                        <input type="checkbox" th:field="*{keysSet}" style="display:none">
+                        <span class="spec-card-check">✓</span>
+                        <span class="spec-card-label">Полный комплект ключей</span>
+                    </label>
+                    <label class="spec-card">
+                        <input type="checkbox" th:field="*{onWarranty}" style="display:none">
+                        <span class="spec-card-check">✓</span>
+                        <span class="spec-card-label">На гарантии</span>
+                    </label>
+                    <label class="spec-card">
+                        <input type="checkbox" th:field="*{noAccidents}" style="display:none">
+                        <span class="spec-card-check">✓</span>
+                        <span class="spec-card-label">Без ДТП</span>
+                    </label>
+                    <label class="spec-card">
+                        <input type="checkbox" th:field="*{dealerServiced}" style="display:none">
+                        <span class="spec-card-check">✓</span>
+                        <span class="spec-card-label">Обслуживалась у дилера</span>
+                    </label>
+                    <label class="spec-card">
+                        <input type="checkbox" th:field="*{customsCleared}" style="display:none">
+                        <span class="spec-card-check">✓</span>
+                        <span class="spec-card-label">Растаможена</span>
+                    </label>
+                    <label class="spec-card">
+                        <input type="checkbox" th:field="*{negotiable}" style="display:none">
+                        <span class="spec-card-check">✓</span>
+                        <span class="spec-card-label">Возможен торг</span>
+                    </label>
+                    <label class="spec-card">
+                        <input type="checkbox" th:field="*{noExchange}" style="display:none">
+                        <span class="spec-card-check">✓</span>
+                        <span class="spec-card-label">Обмен не интересует</span>
+                    </label>
+                    <label class="spec-card">
+                        <input type="checkbox" th:field="*{urgentSale}" style="display:none">
+                        <span class="spec-card-check">✓</span>
+                        <span class="spec-card-label">Срочная продажа</span>
+                    </label>
+                </div>
+                
+                <p th:if="${!isAdmin}" style="font-size: 12px; color: var(--red); margin-bottom: 15px;">
+                    * После сохранения объявление снова отправится на модерацию.
+                </p>
+
+                <div class="wizard-nav-buttons">
+                    <button type="button" class="btn btn-ghost" onclick="prevStep()" style="flex:1">← Назад</button>
+                    <button type="submit" class="btn btn-red" style="flex:2">Сохранить изменения</button>
+                </div>
+            </div>
+
         </form>
     </div>
 </div>
 
+<script th:inline="javascript">
+    let wizardCurrentStep = 1;
+    let selectedFiles = []; // Buffer for newly selected files
+
+    function syncInputFiles() {
+        const imageInput = document.getElementById('imageFilesInput');
+        if (!imageInput) return;
+        const dt = new DataTransfer();
+        selectedFiles.forEach(f => dt.items.add(f));
+        imageInput.files = dt.files;
+    }
+
+    function showWizardStep(stepNum) {
+        document.querySelectorAll('.wizard-step').forEach(step => step.classList.remove('active'));
+        document.getElementById('step' + stepNum).classList.add('active');
+        
+        // Update indicators
+        document.querySelectorAll('.step-indicator').forEach((ind, index) => {
+            const stepIdx = index + 1;
+            ind.classList.remove('active', 'completed');
+            if (stepIdx === stepNum) {
+                ind.classList.add('active');
+            } else if (stepIdx < stepNum) {
+                ind.classList.add('completed');
+            }
+        });
+        
+        wizardCurrentStep = stepNum;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    window.nextStep = function() {
+        if (wizardCurrentStep === 1) {
+            showWizardStep(2);
+        } else if (wizardCurrentStep === 2) {
+            showWizardStep(3);
+        }
+    }
+
+    window.prevStep = function() {
+        if (wizardCurrentStep === 2) {
+            showWizardStep(1);
+        } else if (wizardCurrentStep === 3) {
+            showWizardStep(2);
+        }
+    }
+
+    // Step 1 Validation
+    function validateStep1() {
+        const year = document.getElementById('year');
+        const price = document.getElementById('price');
+        const contactPhone = document.getElementById('contactPhone');
+        const title = document.getElementById('title');
+        const carModel = document.getElementById('carModel');
+        const description = document.getElementById('description');
+        
+        const yearVal = year ? parseInt(year.value) : 0;
+        const isYearValid = year && year.value !== '' && yearVal >= 1900 && yearVal <= new Date().getFullYear() + 1;
+        
+        const priceVal = price ? parseFloat(price.value) : 0;
+        const isPriceValid = price && price.value !== '' && priceVal > 0;
+
+        let isPhoneValid = false;
+        if (contactPhone) {
+            const phoneVal = contactPhone.value.trim();
+            const digitCount = (phoneVal.match(/[0-9]/g) || []).length;
+            isPhoneValid = phoneVal.length >= 5 && digitCount >= 5 && (/^\+?[0-9\s\-()]+$/).test(phoneVal) && (phoneVal.indexOf('+') <= 0);
+        }
+
+        const isTitleValid = title && title.value.trim() !== '';
+        const isCarModelValid = carModel && carModel.value.trim() !== '';
+        const isDescriptionValid = description && description.value.trim() !== '';
+
+        if (year) toggleInputStatus(year, isYearValid);
+        if (price) toggleInputStatus(price, isPriceValid);
+        if (contactPhone) toggleInputStatus(contactPhone, isPhoneValid);
+
+        const allValid = !!(isYearValid && isPriceValid && isPhoneValid && isTitleValid && isCarModelValid && isDescriptionValid);
+
+        const nextBtn = document.getElementById('step1NextBtn');
+        if (nextBtn) {
+            if (allValid) {
+                nextBtn.removeAttribute('disabled');
+            } else {
+                nextBtn.setAttribute('disabled', 'true');
+            }
+        }
+    }
+
+    function toggleInputStatus(input, isValid) {
+        if (input.classList.contains('touched')) {
+            if (isValid) {
+                input.style.borderColor = '#16a34a'; // Green
+                input.style.backgroundColor = '#f0fdf4';
+            } else {
+                input.style.borderColor = '#dc2626'; // Red
+                input.style.backgroundColor = '#fef2f2';
+            }
+        } else {
+            input.style.borderColor = '';
+            input.style.backgroundColor = '';
+        }
+    }
+
+    // Event delegation for input filters and validation
+    document.addEventListener('input', function(e) {
+        if (!e.target) return;
+        
+        if (e.target.id === 'year') {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        } else if (e.target.id === 'mileage') {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        } else if (e.target.id === 'price') {
+            let val = e.target.value.replace(/,/g, '.');
+            val = val.replace(/[^0-9.]/g, '');
+            const parts = val.split('.');
+            if (parts.length > 2) {
+                val = parts[0] + '.' + parts.slice(1).join('');
+            }
+            e.target.value = val;
+        } else if (e.target.id === 'contactPhone') {
+            let val = e.target.value;
+            const hasPlusAtStart = val.startsWith('+');
+            val = val.replace(/[^0-9\-()\s]/g, '');
+            if (hasPlusAtStart) {
+                val = '+' + val;
+            }
+            e.target.value = val;
+        }
+
+        if (['year', 'price', 'contactPhone', 'title', 'carModel', 'description'].includes(e.target.id)) {
+            if (['year', 'price', 'contactPhone'].includes(e.target.id) && e.target.value.trim().length > 0) {
+                e.target.classList.add('touched');
+            }
+            validateStep1();
+        }
+    });
+
+    document.addEventListener('blur', function(e) {
+        if (e.target && ['year', 'price', 'contactPhone', 'title', 'carModel', 'description'].includes(e.target.id)) {
+            if (['year', 'price', 'contactPhone'].includes(e.target.id)) {
+                e.target.classList.add('touched');
+            }
+            validateStep1();
+        }
+    }, true);
+
+    // Initial check on load
+    window.addEventListener('DOMContentLoaded', () => {
+        ['year', 'price', 'contactPhone'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.value.trim().length > 0) {
+                el.classList.add('touched');
+            }
+        });
+        validateStep1();
+    });
+
+    // Step 2 File Selection and Drag/Drop
+    document.addEventListener('click', function(e) {
+        const dropZone = e.target.closest('#dropZone');
+        if (dropZone) {
+            const imageInput = document.getElementById('imageFilesInput');
+            if (imageInput) imageInput.click();
+        }
+    });
+
+    document.addEventListener('dragover', function(e) {
+        const dropZone = e.target.closest('#dropZone');
+        if (dropZone) {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        }
+    });
+
+    document.addEventListener('dragleave', function(e) {
+        const dropZone = e.target.closest('#dropZone');
+        if (dropZone) {
+            dropZone.classList.remove('dragover');
+        }
+    });
+
+    document.addEventListener('drop', function(e) {
+        const dropZone = e.target.closest('#dropZone');
+        if (dropZone) {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const imageInput = document.getElementById('imageFilesInput');
+            if (imageInput && e.dataTransfer.files.length > 0) {
+                appendFiles(e.dataTransfer.files);
+            }
+        }
+    });
+
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.id === 'imageFilesInput') {
+            appendFiles(e.target.files);
+        }
+    });
+
+    // Count existing hidden inputs
+    function getExistingImagesCount() {
+        return document.querySelectorAll('#imagePreviewContainer input[name="images"]').length;
+    }
+
+    function appendFiles(newFileList) {
+        const filesToAdd = Array.from(newFileList);
+        const maxSize = 10 * 1024 * 1024;
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        const allowedExtensions = /(\.jpg|\.jpeg|\.png)$/i;
+
+        let tooLarge = false;
+        let limitReached = false;
+        let invalidFormat = false;
+
+        const existingCount = getExistingImagesCount();
+
+        filesToAdd.forEach(file => {
+            const extensionMatch = allowedExtensions.test(file.name);
+            const mimeMatch = allowedTypes.includes(file.type);
+            if (!extensionMatch && !mimeMatch) {
+                invalidFormat = true;
+                return;
+            }
+            if (file.size > maxSize) {
+                tooLarge = true;
+                return;
+            }
+            if (existingCount + selectedFiles.length >= 10) {
+                limitReached = true;
+                return;
+            }
+            const isDuplicate = selectedFiles.some(f => f.name === file.name && f.size === file.size);
+            if (!isDuplicate) {
+                selectedFiles.push(file);
+            }
+        });
+
+        if (invalidFormat) {
+            alert('Разрешены только изображения форматов JPG и PNG.');
+        }
+        if (tooLarge) {
+            alert('Максимальный размер одного фото — 10 МБ. Файлы превышающие лимит были исключены.');
+        }
+        if (limitReached) {
+            alert('Максимальное количество фотографий — 10. Лишние файлы были проигнорированы.');
+        }
+
+        syncInputFiles();
+        updateImagePreviews();
+    }
+
+    function updateImagePreviews() {
+        const previewContainer = document.getElementById('imagePreviewContainer');
+        if (!previewContainer) return;
+
+        // Clean previous new previews (keeping existing images)
+        document.querySelectorAll('.preview-img-wrapper.new-preview').forEach(el => el.remove());
+
+        if (selectedFiles.length === 0) {
+            const container = document.getElementById('progressBarContainer');
+            if (container) container.style.display = 'none';
+            return;
+        }
+
+        selectedFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'preview-img-wrapper new-preview';
+                wrapper.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview">
+                    <button type="button" class="remove-preview-btn" onclick="removeNewFile(event, ${index})">×</button>
+                `;
+                previewContainer.appendChild(wrapper);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Simulate progress bar upload
+        const container = document.getElementById('progressBarContainer');
+        const fill = document.getElementById('progressBarFill');
+        const percent = document.getElementById('progressPercent');
+        const nextBtn = document.getElementById('step2NextBtn');
+
+        if (nextBtn) nextBtn.setAttribute('disabled', 'true');
+        if (container) container.style.display = 'block';
+        if (fill) fill.style.width = '0%';
+        if (percent) percent.textContent = '0%';
+
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.floor(Math.random() * 15) + 5;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(interval);
+                if (nextBtn) nextBtn.removeAttribute('disabled');
+            }
+            if (fill) fill.style.width = progress + '%';
+            if (percent) percent.textContent = progress + '%';
+        }, 100);
+    }
+
+    // Removes an existing image (just deletes wrapper from DOM)
+    window.removeExistingFile = function(btn) {
+        const wrapper = btn.closest('.preview-img-wrapper');
+        if (wrapper) {
+            wrapper.remove();
+        }
+    };
+
+    // Removes a newly selected image
+    window.removeNewFile = function(e, idx) {
+        e.stopPropagation();
+        selectedFiles.splice(idx, 1);
+        syncInputFiles();
+        updateImagePreviews();
+    };
+</script>
 </body>
 </html>

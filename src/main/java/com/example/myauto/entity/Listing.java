@@ -23,6 +23,30 @@ public class Listing {
     private Integer year;
     private String contactPhone; // Новое поле для связи
 
+    private boolean notBeaten;
+    private boolean notPainted;
+    private boolean isOwner;
+    private boolean serviceBook;
+
+    // New Listing fields requested by user
+    private Integer mileage;
+    private boolean gasEquipment;
+    private String steeringWheel; // "LEFT", "RIGHT"
+    private boolean pricing;
+    private boolean exchange;
+
+    private boolean oneOwner;
+    private boolean originalMileage;
+    private boolean garageStorage;
+    private boolean keysSet;
+    private boolean onWarranty;
+    private boolean noAccidents;
+    private boolean dealerServiced;
+    private boolean customsCleared;
+    private boolean negotiable;
+    private boolean noExchange;
+    private boolean urgentSale;
+
     @Enumerated(EnumType.STRING)
     private ListingStatus status = ListingStatus.PENDING;
 
@@ -70,4 +94,65 @@ public class Listing {
 
     public List<String> getImages() { return images; }
     public void setImages(List<String> images) { this.images = images; }
+
+    public boolean isNotBeaten() { return notBeaten; }
+    public void setNotBeaten(boolean notBeaten) { this.notBeaten = notBeaten; }
+
+    public boolean isNotPainted() { return notPainted; }
+    public void setNotPainted(boolean notPainted) { this.notPainted = notPainted; }
+
+    public boolean isOwner() { return isOwner; }
+    public void setOwner(boolean isOwner) { this.isOwner = isOwner; }
+
+    public boolean isServiceBook() { return serviceBook; }
+    public void setServiceBook(boolean serviceBook) { this.serviceBook = serviceBook; }
+
+    // New getters and setters
+    public Integer getMileage() { return mileage; }
+    public void setMileage(Integer mileage) { this.mileage = mileage; }
+
+    public boolean isGasEquipment() { return gasEquipment; }
+    public void setGasEquipment(boolean gasEquipment) { this.gasEquipment = gasEquipment; }
+
+    public String getSteeringWheel() { return steeringWheel; }
+    public void setSteeringWheel(String steeringWheel) { this.steeringWheel = steeringWheel; }
+
+    public boolean isPricing() { return pricing; }
+    public void setPricing(boolean pricing) { this.pricing = pricing; }
+
+    public boolean isExchange() { return exchange; }
+    public void setExchange(boolean exchange) { this.exchange = exchange; }
+
+    public boolean isOneOwner() { return oneOwner; }
+    public void setOneOwner(boolean oneOwner) { this.oneOwner = oneOwner; }
+
+    public boolean isOriginalMileage() { return originalMileage; }
+    public void setOriginalMileage(boolean originalMileage) { this.originalMileage = originalMileage; }
+
+    public boolean isGarageStorage() { return garageStorage; }
+    public void setGarageStorage(boolean garageStorage) { this.garageStorage = garageStorage; }
+
+    public boolean isKeysSet() { return keysSet; }
+    public void setKeysSet(boolean keysSet) { this.keysSet = keysSet; }
+
+    public boolean isOnWarranty() { return onWarranty; }
+    public void setOnWarranty(boolean onWarranty) { this.onWarranty = onWarranty; }
+
+    public boolean isNoAccidents() { return noAccidents; }
+    public void setNoAccidents(boolean noAccidents) { this.noAccidents = noAccidents; }
+
+    public boolean isDealerServiced() { return dealerServiced; }
+    public void setDealerServiced(boolean dealerServiced) { this.dealerServiced = dealerServiced; }
+
+    public boolean isCustomsCleared() { return customsCleared; }
+    public void setCustomsCleared(boolean customsCleared) { this.customsCleared = customsCleared; }
+
+    public boolean isNegotiable() { return negotiable; }
+    public void setNegotiable(boolean negotiable) { this.negotiable = negotiable; }
+
+    public boolean isNoExchange() { return noExchange; }
+    public void setNoExchange(boolean noExchange) { this.noExchange = noExchange; }
+
+    public boolean isUrgentSale() { return urgentSale; }
+    public void setUrgentSale(boolean urgentSale) { this.urgentSale = urgentSale; }
 }
