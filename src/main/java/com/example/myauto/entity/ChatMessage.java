@@ -19,6 +19,10 @@ public class ChatMessage {
     @JoinColumn(name = "listing_id", nullable = false)
     private Listing listing;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "buyer_id", nullable = true)
+    private User buyer;
+
     @Column(length = 1000, nullable = false)
     private String content;
 
@@ -36,6 +40,9 @@ public class ChatMessage {
 
     public Listing getListing() { return listing; }
     public void setListing(Listing listing) { this.listing = listing; }
+
+    public User getBuyer() { return buyer; }
+    public void setBuyer(User buyer) { this.buyer = buyer; }
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }

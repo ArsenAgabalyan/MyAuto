@@ -144,7 +144,7 @@
                 }
                 rooms.forEach(item => {
                     const a = document.createElement('a');
-                    a.href = '/chat/' + item.id;
+                    a.href = '/chat/' + item.id + '?buyer=' + encodeURIComponent(item.buyer);
                     a.style.cssText = 'display:block;background:white;padding:12px;border-radius:8px;border:1px solid #e2e8f0;text-decoration:none;color:#1e293b;transition:border-color 0.2s;';
                     a.onmouseover = () => a.style.borderColor = '#e31e24';
                     a.onmouseout  = () => a.style.borderColor = '#e2e8f0';

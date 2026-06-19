@@ -94,7 +94,7 @@
             <div th:unless="${#lists.isEmpty(chats)}" class="d-flex flex-column gap-3">
 
                 <a th:each="chatItem : ${chats}"
-                   th:href="@{/chat/{id}(id=${chatItem.listing.id})}"
+                   th:href="@{/chat/{id}(id=${chatItem.listing.id}, buyer=${chatItem.buyer.username})}"
                    class="chat-card p-3 shadow-sm">
 
                     <div class="d-flex align-items-center justify-content-between">
@@ -108,7 +108,7 @@
                                 <h6 class="mb-1 fw-bold text-dark" th:text="${chatItem.listing.title}">Марка авто</h6>
                                 <div class="small text-muted">
                                     <i class="bi bi-person me-1"></i>
-                                    Продавец: <span th:text="${chatItem.listing.user.username}">Seller</span>
+                                    Собеседник: <span th:text="${chatItem.interlocutor}">Interlocutor</span>
                                 </div>
                             </div>
                         </div>

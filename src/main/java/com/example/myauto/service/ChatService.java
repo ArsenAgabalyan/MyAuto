@@ -27,20 +27,23 @@ public class ChatService {
     }
 
     @Transactional
-    public List<ChatMessage> getMessagesForListingAndMarkAsRead(Long listingId, String currentUsername) {
-        chatMessageRepository.markMessagesAsRead(listingId, currentUsername);
-        return chatMessageRepository.findByListingIdOrderBySentAtAsc(listingId);
+    public List<ChatMessage> getMessagesForListingAndMarkAsRead(Long listingId, String buyerUsername, String currentUsername) {
+        chatMessageRepository.markMessagesAsRead(listingId, buyerUsername, currentUsername);
+        return chatMessageRepository.findByListingIdAndBuyerUsernameOrderBySentAtAsc(listingId, buyerUsername);
     }
 
     @Transactional
-    public ChatMessage saveMessage(Long listingId, String username, String content) {
+    public ChatMessage saveMessage(Long listingId, String buyerUsername, String senderUsername, String content) {
         Listing listing = listingRepository.findById(listingId)
                 .orElseThrow(() -> new IllegalArgumentException("Объявление не найдено: " + listingId));
-        User sender = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден: " + username));
+        User sender = userRepository.findByUsername(senderUsername)
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден: " + senderUsername));
+        User buyer = userRepository.findByUsername(buyerUsername)
+                .orElseThrow(() -> new IllegalArgumentException("Покупатель не найден: " + buyerUsername));
 
         ChatMessage message = new ChatMessage();
         message.setListing(listing);
+        message.setBuyer(buyer);
         message.setSender(sender);
         message.setContent(content);
         message.setRead(false);
@@ -52,8 +55,8 @@ public class ChatService {
         return chatMessageRepository.findAllMyMessages(username);
     }
 
-    public long getUnreadCount(Long listingId, String currentUsername) {
-        return chatMessageRepository.countUnreadMessages(listingId, currentUsername);
+    public long getUnreadCount(Long listingId, String buyerUsername, String currentUsername) {
+        return chatMessageRepository.countUnreadMessages(listingId, buyerUsername, currentUsername);
     }
 
     public long getTotalUnreadCount(String username) {

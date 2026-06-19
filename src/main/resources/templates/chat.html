@@ -232,10 +232,12 @@
 
 <input type="hidden" id="listing-id" th:value="${listing.id}">
 <input type="hidden" id="current-username" th:value="${currentUsername}">
+<input type="hidden" id="buyer-username" th:value="${buyerUsername}">
 
 <script>
     const listingId = document.getElementById('listing-id').value;
     const currentUsername = document.getElementById('current-username').value;
+    const buyerUsername = document.getElementById('buyer-username').value;
     const chatMessagesContainer = document.getElementById('chat-messages');
 
     // Авто-скролл вниз при открытии страницы
@@ -247,7 +249,7 @@
 
     stompClient.connect({}, function (frame) {
         console.log('Connected: ' + frame);
-        stompClient.subscribe('/topic/chat/' + listingId, function (response) {
+        stompClient.subscribe('/topic/chat/' + listingId + '/' + buyerUsername, function (response) {
             const message = JSON.parse(response.body);
             displayNewMessage(message);
         });
@@ -260,7 +262,7 @@
         const text = input.value.trim();
 
         if (text && stompClient && stompClient.connected) {
-            stompClient.send("/app/chat/" + listingId, {}, JSON.stringify({ content: text }));
+            stompClient.send("/app/chat/" + listingId, {}, JSON.stringify({ content: text, buyer: buyerUsername }));
             input.value = '';
         }
     });
