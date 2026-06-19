@@ -31,12 +31,7 @@
 </head>
 <body>
 
-<nav class="nav">
-    <a class="nav-brand" href="/"><span>MY</span>AUTO</a>
-    <div class="nav-links">
-        <a href="/" class="btn btn-outline btn-sm">На главную</a>
-    </div>
-</nav>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <div class="page-wide">
 
@@ -109,5 +104,8 @@
     </div>
 </div>
 
+<script>
+    // Navbar helpers are handled by the navbar fragment.
+</script>
 </body>
 </html>

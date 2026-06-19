@@ -21,10 +21,7 @@
 </head>
 <body>
 
-<nav class="nav">
-    <a class="nav-brand" href="/"><span>MY</span>AUTO</a>
-    <a th:href="${isAdmin ? '/admin/moderation' : '/profile'}" class="btn btn-outline btn-sm">← Назад</a>
-</nav>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <div class="page" style="max-width:580px;margin-top:10px">
     <p class="page-title">Редактирование объявления</p>
@@ -608,6 +605,8 @@
         syncInputFiles();
         updateImagePreviews();
     };
+
+    // Navbar helpers are handled by the navbar fragment.
 </script>
 </body>
 </html>

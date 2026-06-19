@@ -34,7 +34,10 @@ body {
 
 /* NAV */
 .nav {
-    background: var(--dark);
+    background: rgba(14, 9, 71, 0.85); /* Полупрозрачный slate-900 */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     padding: 0 32px;
     display: flex;
     align-items: center;
@@ -43,7 +46,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: var(--shadow);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
 }
 
 .nav-brand {
@@ -63,17 +66,110 @@ body {
 .nav-links { 
     display: flex; 
     align-items: center; 
-    gap: 16px; 
+    gap: 12px; 
 }
 
-.nav-user { 
-    color: #94a3b8; 
-    font-size: 14px; 
-    font-weight: 500;
+.nav-icon-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #cbd5e1; /* Slate 300 */
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: var(--transition);
+    white-space: nowrap;
 }
 
-.nav-user strong {
+.nav-icon-link:hover {
     color: var(--white);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.nav-admin-link {
+    color: #fde047 !important; /* Yellow 300 */
+    background: rgba(253, 224, 71, 0.04);
+    border-color: rgba(253, 224, 71, 0.15);
+}
+
+.nav-admin-link:hover {
+    color: #fef08a !important;
+    background: rgba(253, 224, 71, 0.1);
+    border-color: rgba(253, 224, 71, 0.25);
+}
+
+.nav-logout-link {
+    color: #fca5a5 !important; /* Red 300 */
+    background: rgba(239, 68, 68, 0.04);
+    border-color: rgba(239, 68, 68, 0.15);
+}
+
+.nav-logout-link:hover {
+    color: #fee2e2 !important;
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.25);
+}
+
+.nav-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: var(--transition);
+    text-decoration: none;
+}
+
+.nav-back-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--white);
+}
+
+.btn-sell-nav {
+    background: var(--red) !important;
+    color: var(--white) !important;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+    border-radius: 20px !important;
+    padding: 8px 18px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-sell-nav:hover {
+    background: var(--red-hover) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+}
+
+.nav-badge {
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 1.5px solid var(--dark);
+    line-height: 1;
+    animation: badgePulse 2s infinite;
 }
 
 .nav-divider {

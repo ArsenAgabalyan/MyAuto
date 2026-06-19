@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<nav th:fragment="navbar" class="nav">
+    <a class="nav-brand" href="/"><span>MY</span>AUTO</a>
+    <button class="nav-toggle" onclick="toggleMobileMenu()" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    <div class="nav-links mobile-collapsed">
+        <div style="display:flex; gap:6px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);">
+            <button class="lang-btn" onclick="setLang('ru')" data-lang="ru">RU</button>
+            <button class="lang-btn" onclick="setLang('en')" data-lang="en">EN</button>
+            <button class="lang-btn" onclick="setLang('hy')" data-lang="hy">HY</button>
+        </div>
+        <div class="nav-divider"></div>
+        <th:block th:if="${#authentication.name == 'anonymousUser'}">
+            <button class="btn btn-outline btn-sm nav-btn-outline" onclick="handleLogin()" data-i18n="login" style="border-radius:20px; padding: 8px 18px;">Войти</button>
+            <button class="btn btn-red btn-sm nav-btn-red" onclick="handleRegister()" data-i18n="register" style="border-radius:20px; padding: 8px 18px;">Регистрация</button>
+        </th:block>
+        <th:block th:if="${#authentication.name != 'anonymousUser'}">
+            <!-- Messages Link with Dynamic Badge -->
+            <a href="/chats" class="nav-icon-link nav-chat-link">
+                💬 <span data-i18n="messages">Сообщения</span>
+                <span id="navUnreadBadge" class="nav-badge" style="display:none;">0</span>
+            </a>
+            
+            <!-- Profile Link -->
+            <a href="/profile" class="nav-icon-link nav-profile-link">
+                👤 <span th:text="${#authentication.name}">Профиль</span>
+            </a>
+            
+            <!-- Admin Moderation -->
+            <a th:if="${#authorization.expression('hasAuthority(''ROLE_ADMIN'')')}" href="/admin/moderation" class="nav-icon-link nav-admin-link">
+                🛡️ <span data-i18n="moderation">Модерация</span>
+            </a>
+            
+            <!-- Sell Car Button -->
+            <button class="btn btn-red btn-sm btn-sell-nav" onclick="handleSellCar()" data-i18n="sell">+ Продать авто</button>
+            
+            <!-- Logout Link -->
+            <a href="/auth/logout" class="nav-icon-link nav-logout-link">
+                🚪 <span data-i18n="logout">Выйти</span>
+            </a>
+        </th:block>
+    </div>
+    
+    <script>
+        // ── NAVBAR HELPERS ──
+        function toggleMobileMenu() {
+            document.querySelector('.nav').classList.toggle('mobile-open');
+        }
+
+        const T_GLOBAL = {
+            ru: {
+                messages: 'Сообщения', profile: 'Профиль', moderation: 'Модерация', sell: '+ Продать авто', logout: 'Выйти', login: 'Войти', register: 'Регистрация',
+                loginTitle: 'Вход в систему', regTitle: 'Создать аккаунт', fUsername: 'Логин', fPassword: 'Пароль', fChooseLogin: 'Придумайте логин', fChoosePass: 'Придумайте пароль', noAccount: 'Нет аккаунта? Зарегистрироваться', haveAccount: 'Есть аккаунт? Войти',
+                addTitle: 'Продать автомобиль', editTitle: 'Редактирование объявления', stepInfo: 'Инфо', stepPhoto: 'Фото', stepSpecs: 'Характеристики',
+                fAdTitle: 'Заголовок', fCarModel: 'Модель', fYear: 'Год выпуска', fPrice: 'Цена ($)', fPhone: 'Телефон для связи', fDesc: 'Описание', fPhotos: 'Фотографии автомобиля',
+                submitAd: 'Отправить на модерацию', btnNext: 'Далее', btnBack: '← Назад', btnCancel: 'Отмена',
+                fMileage: 'Пробег *', fCondition: 'Текущее состояние *', fCondNotBeaten: 'Не битое', fCondBeaten: 'Битое',
+                fGas: 'Газобаллонное оборудование *', fGasNotInstalled: 'Не установлено', fGasInstalled: 'Установлено',
+                fSteering: 'Руль *', fSteerLeft: 'Слева', fSteerRight: 'Справа', fPricing: 'Расценка *', fExchange: 'Возможен обмен *',
+                fYes: 'Да', fNo: 'Нет', fExtra: 'Дополнительно:',
+                specNotPainted: 'Не крашена', specOwner: 'Я собственник', specServiceBook: 'Сервисная книжка', specOneOwner: 'Один владелец',
+                specOriginalMileage: 'Оригинальный пробег', specGarageStorage: 'Гаражное хранение', specKeysSet: 'Полный комплект ключей',
+                specOnWarranty: 'На гарантии', specNoAccidents: 'Без ДТП', specDealerServiced: 'Обслуживалась у дилера',
+                specCustomsCleared: 'Растаможена', specNegotiable: 'Возможен торг', specNoExchange: 'Обмен не интересует', specUrgentSale: 'Срочная продажа',
+                myProfile: 'Мой профиль', myCars: 'Мои автомобили', welcomeUser: 'Добро пожаловать',
+                colPhoto: 'Фото', colTitle: 'Заголовок / Модель', colPrice: 'Цена', colStatus: 'Статус', colDate: 'Дата создания', colManage: 'Управление',
+                btnEdit: 'Изменить', btnDelete: 'Удалить', statusPending: 'На проверке', statusApproved: 'Опубликовано',
+                moderationTitle: 'Панель модерации', tabAll: 'Все', tabPending: 'Ожидает', tabApproved: 'Одобрено', tabRejected: 'Отклонено',
+                btnBulkApprove: 'Одобрить выбранные', btnBulkDelete: 'Удалить выбранные', btnCheck: 'Проверить', btnApprove: 'Одобрить', btnReject: 'Отклонить', bulkActionsLabel: 'Применить к выбранным:',
+                myMessages: 'Мои сообщения', noChats: 'У вас пока нет активных диалогов', backToChats: 'Назад к списку чатов', btnSend: 'Отправить', phTypeMessage: 'Введите сообщение...'
+            },
+            en: {
+                messages: 'Messages', profile: 'Profile', moderation: 'Moderation', sell: '+ Sell car', logout: 'Log out', login: 'Log in', register: 'Register',
+                loginTitle: 'Sign In', regTitle: 'Create Account', fUsername: 'Username', fPassword: 'Password', fChooseLogin: 'Choose username', fChoosePass: 'Choose password', noAccount: 'No account? Register', haveAccount: 'Have account? Log in',
+                addTitle: 'Sell a Car', editTitle: 'Edit Listing', stepInfo: 'Info', stepPhoto: 'Photos', stepSpecs: 'Specs',
+                fAdTitle: 'Title', fCarModel: 'Model', fYear: 'Year', fPrice: 'Price ($)', fPhone: 'Phone', fDesc: 'Description', fPhotos: 'Photos',
+                submitAd: 'Submit for review', btnNext: 'Next', btnBack: '← Back', btnCancel: 'Cancel',
+                fMileage: 'Mileage *', fCondition: 'Condition *', fCondNotBeaten: 'Not Beaten', fCondBeaten: 'Beaten',
+                fGas: 'Gas Equipment *', fGasNotInstalled: 'Not Installed', fGasInstalled: 'Installed',
+                fSteering: 'Steering Wheel *', fSteerLeft: 'Left', fSteerRight: 'Right', fPricing: 'Pricing *', fExchange: 'Exchange *',
+                fYes: 'Yes', fNo: 'No', fExtra: 'Extras:',
+                specNotPainted: 'Not painted', specOwner: 'Owner', specServiceBook: 'Service book', specOneOwner: 'One owner',
+                specOriginalMileage: 'Original mileage', specGarageStorage: 'Garage storage', specKeysSet: 'Full key set',
+                specOnWarranty: 'On warranty', specNoAccidents: 'No accidents', specDealerServiced: 'Dealer serviced',
+                specCustomsCleared: 'Customs cleared', specNegotiable: 'Price negotiable', specNoExchange: 'No exchange', specUrgentSale: 'Urgent sale',
+                myProfile: 'My Profile', myCars: 'My Cars', welcomeUser: 'Welcome',
+                colPhoto: 'Photo', colTitle: 'Title / Model', colPrice: 'Price', colStatus: 'Status', colDate: 'Created At', colManage: 'Manage',
+                btnEdit: 'Edit', btnDelete: 'Delete', statusPending: 'Pending', statusApproved: 'Published',
+                moderationTitle: 'Moderation Panel', tabAll: 'All', tabPending: 'Pending', tabApproved: 'Approved', tabRejected: 'Rejected',
+                btnBulkApprove: 'Approve Selected', btnBulkDelete: 'Delete Selected', btnCheck: 'Check', btnApprove: 'Approve', btnReject: 'Reject', bulkActionsLabel: 'Bulk Actions:',
+                myMessages: 'My Messages', noChats: 'No active chats yet', backToChats: 'Back to Chats', btnSend: 'Send', phTypeMessage: 'Type a message...'
+            },
+            hy: {
+                messages: 'Իմ հաղորդագր.', profile: 'Հաշիվ', moderation: 'Մոդ.', sell: '+ Վաճ.', logout: 'Ելք', login: 'Մուտք', register: 'Գրանց.',
+                loginTitle: 'Մուտք գործ.', regTitle: 'Ստ. հաշիվ', fUsername: 'Օգտ.', fPassword: 'Գաղտ.', fChooseLogin: 'Ընտ. օգտ.', fChoosePass: 'Ընտ. գաղտ.', noAccount: 'Հաշ. չկա? Գրանց.', haveAccount: 'Կա հաշ.? Մուտք',
+                addTitle: 'Վաճառել մեքենա', editTitle: 'Խմբագրել հայտարարությունը', stepInfo: 'Տեղեկություն', stepPhoto: 'Նկարներ', stepSpecs: 'Բնութագիր',
+                fAdTitle: 'Վերնագիր', fCarModel: 'Մոդել', fYear: 'Տարեթիվ', fPrice: 'Գին ($)', fPhone: 'Հեռախոս', fDesc: 'Նկարագրություն', fPhotos: 'Նկարներ',
+                submitAd: 'Ուղարկել ստուգման', btnNext: 'Առաջ', btnBack: '← Հետ', btnCancel: 'Չեղարկել',
+                fMileage: 'Վազք *', fCondition: 'Վիճակ *', fCondNotBeaten: 'Վթարված չէ', fCondBeaten: 'Վթարված',
+                fGas: 'Գազի համակարգ *', fGasNotInstalled: 'Տեղադրված չէ', fGasInstalled: 'Տեղադրված է',
+                fSteering: 'Ղեկ *', fSteerLeft: 'Ձախ', fSteerRight: 'Աջ', fPricing: 'Գնահատում *', fExchange: 'Փոխանակում *',
+                fYes: 'Այո', fNo: 'Ոչ', fExtra: 'Լրացուցիչ.',
+                specNotPainted: 'Չներկված', specOwner: 'Սեփականատեր', specServiceBook: 'Սպասարկման գրքույկ', specOneOwner: 'Մեկ տեր',
+                specOriginalMileage: 'Օրիգինալ վազք', specGarageStorage: 'Գարաժային պահպանում', specKeysSet: 'Բանալիների հավաքածու',
+                specOnWarranty: 'Երաշխիքի մեջ', specNoAccidents: 'Առանց վթարների', specDealerServiced: 'Սպասարկվել է դիլերի մոտ',
+                specCustomsCleared: 'Մաքսազերծված', specNegotiable: 'Սակարկելի', specNoExchange: 'Փոխանակում չկա', specUrgentSale: 'Շտապ վաճառք',
+                myProfile: 'Իմ էջը', myCars: 'Իմ մեքենաները', welcomeUser: 'Բարի գալուստ',
+                colPhoto: 'Նկար', colTitle: 'Վերնագիր / Մոդել', colPrice: 'Գին', colStatus: 'Կարգավիճակ', colDate: 'Ստեղծման ամսաթիվ', colManage: 'Կառավարում',
+                btnEdit: 'Փոխել', btnDelete: 'Ջնջել', statusPending: 'Ստուգվում է', statusApproved: 'Հրապարակված',
+                moderationTitle: 'Մոդերատորի վահանակ', tabAll: 'Բոլորը', tabPending: 'Սպասող', tabApproved: 'Հաստատված', tabRejected: 'Մերժված',
+                btnBulkApprove: 'Հաստատել ընտրվածները', btnBulkDelete: 'Ջնջել ընտրվածները', btnCheck: 'Ստուգել', btnApprove: 'Հաստատել', btnReject: 'Մերժել', bulkActionsLabel: 'Խմբային գործողություններ.',
+                myMessages: 'Իմ հաղորդագրությունները', noChats: 'Դեռևս չկան ակտիվ երկխոսություններ', backToChats: 'Հետ դեպի հաղորդագրություններ', btnSend: 'Ուղարկել', phTypeMessage: 'Գրել հաղորդագրություն...'
+            }
+        };
+        
+        let currentLang = localStorage.getItem('ma_lang') || 'ru';
+        
+        function setLang(l) {
+            currentLang = l;
+            localStorage.setItem('ma_lang', l);
+            if (typeof applyLang === 'function') {
+                if (typeof lang !== 'undefined') {
+                    lang = l;
+                }
+                applyLang();
+            } else {
+                applyNavbarLang();
+            }
+        }
+        
+        function applyNavbarLang() {
+            const t = T_GLOBAL[currentLang] || T_GLOBAL.ru;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                if (t[key] !== undefined) el.textContent = t[key];
+            });
+            document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+                const key = el.dataset.i18nPh;
+                if (t[key] !== undefined) el.placeholder = t[key];
+            });
+            document.querySelectorAll('.nav .lang-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.lang === currentLang);
+            });
+        }
+        
+        function updateNavbarUnreadCount() {
+            const badge = document.getElementById('navUnreadBadge');
+            if (!badge) return;
+            fetch('/api/chat/unread-count')
+                .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+                .then(data => {
+                    if (data.count > 0) {
+                        badge.textContent = data.count;
+                        badge.style.display = 'inline-flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                })
+                .catch(() => {});
+        }
+
+        function handleSellCar() {
+            const modal = document.getElementById('addModal');
+            if (modal) {
+                openModal('addModal');
+            } else {
+                window.location.href = '/listings/add';
+            }
+        }
+
+        function handleLogin() {
+            const modal = document.getElementById('loginModal');
+            if (modal) {
+                openModal('loginModal');
+            } else {
+                window.location.href = '/auth/login';
+            }
+        }
+
+        function handleRegister() {
+            const modal = document.getElementById('registerModal');
+            if (modal) {
+                openModal('registerModal');
+            } else {
+                window.location.href = '/auth/register';
+            }
+        }
+
+        // Initialize navbar
+        applyNavbarLang();
+        updateNavbarUnreadCount();
+        setInterval(updateNavbarUnreadCount, 10000);
+        
+        // Storage change listener to keep tabs/modals in sync
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'ma_lang') {
+                const newLang = e.newValue || 'ru';
+                currentLang = newLang;
+                if (typeof applyLang === 'function') {
+                    if (typeof lang !== 'undefined') {
+                        lang = newLang;
+                    }
+                    applyLang();
+                } else {
+                    applyNavbarLang();
+                }
+            }
+        });
+    </script>
+</nav>
+</body>
+</html>

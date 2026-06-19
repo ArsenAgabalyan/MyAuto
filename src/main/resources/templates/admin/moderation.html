@@ -46,12 +46,7 @@
 </head>
 <body>
 
-<nav class="nav">
-    <a class="nav-brand" href="/"><span>MY</span>AUTO</a>
-    <div class="nav-links">
-        <a href="/" class="btn btn-outline btn-sm">На главную</a>
-    </div>
-</nav>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <div class="page-wide" style="margin-top: 32px; margin-bottom: 64px;">
     
@@ -461,6 +456,8 @@
         document.querySelectorAll(".modal-thumb").forEach(img => img.classList.remove("active"));
         thumb.classList.add("active");
     }
+
+    // Navbar helpers are handled by the navbar fragment.
 </script>
 
 </body>

@@ -265,35 +265,7 @@
 <body>
 
 <!-- NAV -->
-<nav class="nav">
-    <a class="nav-brand" href="/"><span>MY</span>AUTO</a>
-    <button class="nav-toggle" onclick="toggleMobileMenu()" aria-label="Toggle menu">
-        <span></span>
-        <span></span>
-        <span></span>
-    </button>
-    <div class="nav-links mobile-collapsed">
-        <div style="display:flex;gap:4px">
-            <button class="lang-btn" onclick="setLang('ru')" data-lang="ru">RU</button>
-            <button class="lang-btn" onclick="setLang('en')" data-lang="en">EN</button>
-            <button class="lang-btn" onclick="setLang('hy')" data-lang="hy">HY</button>
-        </div>
-        <div class="nav-divider"></div>
-        <th:block th:if="${#authentication.name == 'anonymousUser'}">
-            <button class="btn btn-outline btn-sm" onclick="openModal('loginModal')" data-i18n="login">Войти</button>
-            <button class="btn btn-red btn-sm" onclick="openModal('registerModal')" data-i18n="register">Регистрация</button>
-        </th:block>
-        <th:block th:if="${#authentication.name != 'anonymousUser'}">
-            <!-- ИЗМЕНЕНО: Ссылка на профиль -->
-            <a href="/profile" class="nav-user" style="text-decoration:none; color: #ccc;">
-                👤 Профиль
-            </a>
-            <a th:if="${#authorization.expression('hasAuthority(''ROLE_ADMIN'')')}" href="/admin/moderation" class="btn btn-warn btn-sm" data-i18n="moderation">Модерация</a>
-            <button class="btn btn-red btn-sm" onclick="openModal('addModal')" data-i18n="sell">+ Продать авто</button>
-            <a href="/auth/logout" class="btn btn-outline btn-sm" data-i18n="logout">Выйти</a>
-        </th:block>
-    </div>
-</nav>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <!-- Уведомление об успешной публикации -->
 <div th:if="${param.success}" style="background:#1e293b;color:#fbbf24;text-align:center;padding:8px;font-size:13px;font-weight:600;">
@@ -633,7 +605,7 @@
                     </div>
                     <div class="wizard-nav-buttons">
                         <button type="button" class="btn btn-ghost" onclick="prevStep()" style="flex:1">← Назад</button>
-                        <button type="button" class="btn btn-red" id="step2NextBtn" onclick="nextStep()" style="flex:2">Далее</button>
+                        <button type="button" class="btn btn-red" id="step2NextBtn" onclick="nextStep()" style="flex:2" disabled>Далее</button>
                     </div>
                 </div>
 
@@ -999,14 +971,27 @@
                 return response.json();
             })
             .then(data => {
+                const count = data.count;
+                
+                // Обновляем бейдж виджета сообщений
                 const badge = document.getElementById('unread-main-badge');
                 if (badge) {
-                    const count = data.count;
                     if (count > 0) {
                         badge.innerText = count;
-                        badge.style.display = 'flex'; // Показываем бейдж с цифрой
+                        badge.style.display = 'flex';
                     } else {
-                        badge.style.display = 'none'; // Скрываем если 0
+                        badge.style.display = 'none';
+                    }
+                }
+                
+                // Обновляем бейдж на навбаре
+                const navBadge = document.getElementById('navUnreadBadge');
+                if (navBadge) {
+                    if (count > 0) {
+                        navBadge.innerText = count;
+                        navBadge.style.display = 'inline-flex';
+                    } else {
+                        navBadge.style.display = 'none';
                     }
                 }
             })
@@ -1096,6 +1081,33 @@
 
     function toggleMobileMenu() {
         document.querySelector('.nav').classList.toggle('mobile-open');
+    }
+
+    function handleSellCar() {
+        const modal = document.getElementById('addModal');
+        if (modal) {
+            openModal('addModal');
+        } else {
+            window.location.href = '/listings/add';
+        }
+    }
+
+    function handleLogin() {
+        const modal = document.getElementById('loginModal');
+        if (modal) {
+            openModal('loginModal');
+        } else {
+            window.location.href = '/auth/login';
+        }
+    }
+
+    function handleRegister() {
+        const modal = document.getElementById('registerModal');
+        if (modal) {
+            openModal('registerModal');
+        } else {
+            window.location.href = '/auth/register';
+        }
     }
 
     // ── i18n ──
@@ -1402,6 +1414,8 @@
         if (selectedFiles.length === 0) {
             const container = document.getElementById('progressBarContainer');
             if (container) container.style.display = 'none';
+            const nextBtn = document.getElementById('step2NextBtn');
+            if (nextBtn) nextBtn.setAttribute('disabled', 'true');
             return;
         }
 

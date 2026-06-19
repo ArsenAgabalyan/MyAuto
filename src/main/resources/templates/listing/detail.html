@@ -10,10 +10,7 @@
 </head>
 <body>
 
-<nav class="nav">
-    <a class="nav-brand" href="/"><span>MY</span>AUTO</a>
-    <a href="/" class="btn btn-outline btn-sm">← На главную</a>
-</nav>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <div class="container">
     <div class="detail-grid">
@@ -207,6 +204,8 @@
             }
         }
     })();
+
+    // Navbar helpers are handled by the navbar fragment.
 </script>
 
 </body>

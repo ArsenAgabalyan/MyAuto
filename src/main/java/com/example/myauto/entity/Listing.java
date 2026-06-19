@@ -23,17 +23,17 @@ public class Listing {
     private Integer year;
     private String contactPhone; // Новое поле для связи
 
-    private boolean notBeaten;
+    private boolean notBeaten = true;
     private boolean notPainted;
     private boolean isOwner;
     private boolean serviceBook;
 
     // New Listing fields requested by user
     private Integer mileage;
-    private boolean gasEquipment;
-    private String steeringWheel; // "LEFT", "RIGHT"
-    private boolean pricing;
-    private boolean exchange;
+    private boolean gasEquipment = false;
+    private String steeringWheel = "LEFT"; // "LEFT", "RIGHT"
+    private boolean pricing = true;
+    private boolean exchange = false;
 
     private boolean oneOwner;
     private boolean originalMileage;
