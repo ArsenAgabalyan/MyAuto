@@ -328,12 +328,12 @@ tr:hover td {
 .filter-bar {
     background: var(--white);
     border-bottom: 1px solid var(--border);
-    padding: 24px 0;
+    padding: 12px 0;
     box-shadow: var(--shadow-sm);
 }
 
 .filter-inner {
-    max-width: 1200px;
+    max-width: 950px;
     margin: 0 auto;
     padding: 0 24px;
 }
@@ -489,6 +489,40 @@ tr:hover td {
 
 .carousel-btn.prev { left: 10px; }
 .carousel-btn.next { right: 10px; }
+
+/* Floating Favorite Heart Button on Cards */
+.btn-favorite {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: var(--transition);
+    z-index: 10;
+}
+.btn-favorite svg {
+    width: 18px;
+    height: 18px;
+    color: #64748b;
+    fill: none;
+    transition: var(--transition);
+}
+.btn-favorite:hover {
+    transform: scale(1.1);
+    background: #ffffff;
+}
+.btn-favorite.active svg {
+    color: #ef4444;
+    fill: #ef4444;
+}
 
 .car-body {
     padding: 20px;

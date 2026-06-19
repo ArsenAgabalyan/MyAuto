@@ -6,11 +6,22 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM ChatMessage m WHERE m.listing.id = :listingId")
+    void deleteByListingId(@Param("listingId") Long listingId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM ChatMessage m WHERE m.listing.id IN :listingIds")
+    void deleteByListingIdIn(@Param("listingIds") List<Long> listingIds);
 
     @Query("SELECT m FROM ChatMessage m WHERE m.listing.id = :listingId AND m.buyer.username = :buyerUsername ORDER BY m.sentAt ASC")
     List<ChatMessage> findByListingIdAndBuyerUsernameOrderBySentAtAsc(

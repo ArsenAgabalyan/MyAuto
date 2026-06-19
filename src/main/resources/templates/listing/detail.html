@@ -40,8 +40,15 @@
         <div>
             <div class="info-box">
                 <div>
-                    <div class="price-tag" th:text="${#numbers.formatDecimal(car.price, 0, 'WHITESPACE', 0, 'POINT')} + ' $'">0 $</div>
-                    <h1 class="car-title-text" th:text="${car.title}">Марка Модель Авто</h1>
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+                        <div class="price-tag" th:text="${#numbers.formatDecimal(car.price, 0, 'WHITESPACE', 0, 'POINT')} + ' $'" style="margin-bottom:0;">0 $</div>
+                        <button class="btn-favorite-detail" th:attr="data-id=${car.id}" onclick="toggleFavoriteDetail(this)" style="background:none; border:none; cursor:pointer; padding:4px; display:flex; align-items:center; justify-content:center; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='none'">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px; height:28px; transition:all 0.2s;">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <h1 class="car-title-text" th:text="${car.title}" style="margin-top:8px;">Марка Модель Авто</h1>
                 </div>
 
                 <table class="tech-table">
@@ -172,6 +179,34 @@
                 list.innerHTML = '<div style="text-align:center;color:#ef4444;padding:20px 0;font-size:13px;">Ошибка загрузки</div>';
             });
     }
+
+    // Favorites details page integration
+    window.toggleFavoriteDetail = function(btn) {
+        const id = btn.getAttribute('data-id');
+        let favorites = JSON.parse(localStorage.getItem('myauto_favorites') || '[]');
+        const svg = btn.querySelector('svg');
+        
+        if (favorites.includes(id)) {
+            favorites = favorites.filter(favId => favId !== id);
+            svg.style.fill = 'none';
+        } else {
+            favorites.push(id);
+            svg.style.fill = '#dc2626';
+        }
+        localStorage.setItem('myauto_favorites', JSON.stringify(favorites));
+    };
+
+    // Initialize favorite details state on load
+    (function() {
+        const btn = document.querySelector('.btn-favorite-detail');
+        if (btn) {
+            const id = btn.getAttribute('data-id');
+            const favorites = JSON.parse(localStorage.getItem('myauto_favorites') || '[]');
+            if (favorites.includes(id)) {
+                btn.querySelector('svg').style.fill = '#dc2626';
+            }
+        }
+    })();
 </script>
 
 </body>

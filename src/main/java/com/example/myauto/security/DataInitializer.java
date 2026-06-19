@@ -1,4 +1,4 @@
-package com.example.myauto.security; // Убедитесь, что package совпадает с вашим
+package com.example.myauto.security;
 
 import com.example.myauto.entity.*;
 import com.example.myauto.repository.ListingRepository;
@@ -6,11 +6,32 @@ import com.example.myauto.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+
 @Component
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final ListingRepository listingRepository;
+
+    private static final String[] DETAIL_IMAGE_URLS = {
+            "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=1080", // Interior
+            "https://images.unsplash.com/photo-1502877338535-766e1452684a?w=1080", // Dashboard
+            "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=1080", // Wheel
+            "https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=1080"  // Engine
+    };
+
+    private static final String[] DETAIL_IMAGE_NAMES = {
+            "detail_interior.jpg",
+            "detail_dashboard.jpg",
+            "detail_wheel.jpg",
+            "detail_engine.jpg"
+    };
 
     public DataInitializer(UserRepository userRepository, ListingRepository listingRepository) {
         this.userRepository = userRepository;
@@ -29,14 +50,17 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("✅ Администратор создан — логин: admin, пароль: admin");
         }
 
-        // 2. ИСПРАВЛЕНО: Добавляем машины ТОЛЬКО если база данных пуста
+        // 2. Добавляем машины ТОЛЬКО если база данных пуста
         if (listingRepository.count() == 0) {
             System.out.println("🔄 База данных пуста. Заполнение тестовыми данными...");
 
             User admin = userRepository.findByUsername("admin").orElseThrow();
+            String uploadDir = System.getProperty("user.dir") + "/uploads/";
+
+            // Скачиваем или создаем детальные изображения
+            initDetailImages(uploadDir);
 
             String[][] cars = {
-                    // Оригинальные 10 машин
                     {"Toyota Camry 2020 — отличное состояние", "Camry V70", "2020", "18500", "+374 91 111 001", "Идеальное состояние, не бита, не крашена.", "/uploads/1.jpg"},
                     {"Skoda Octavia — практичный и вместительный", "Octavia A8", "2022", "19900", "+374 91 111 002", "Бензин 1.5 TSI, АКПП. Как новый.", "/uploads/2.jpg"},
                     {"Nissan Qashqai — городской кроссовер", "Qashqai J12", "2021", "20500", "+374 91 111 003", "Гибрид e-Power, передний привод. Пробег 29 000 км.", "/uploads/3.jpg"},
@@ -47,8 +71,6 @@ public class DataInitializer implements CommandLineRunner {
                     {"Hyundai Tucson", "Tucson NX4", "2022", "26000", "+374 91 111 008", "Официальный дилер, на гарантии, 1 владелец.", "/uploads/8.jpg"},
                     {"Kia Sportage X-Line", "Sportage NQ5", "2023", "28000", "+374 91 111 009", "Новый автомобиль, без пробега. Самая полная комплектация X-Line.", "/uploads/9.jpg"},
                     {"Honda Civic Sport", "Civic X", "2019", "16500", "+374 91 111 010", "1.5 турбо, спортивная подвеска, отличная динамика.", "/uploads/10.jpg"},
-
-                    // Дополнительные 20 машин
                     {"Ford Mustang GT — Американская мускулатура", "Mustang VI", "2017", "24500", "+374 91 111 011", "5.0 V8 Coyote, легендарный звук, задний привод, механика.", "/uploads/11.jpg"},
                     {"Volkswagen Golf GTI — Заряженный хэтчбек", "Golf VII GTI", "2016", "15800", "+374 91 111 012", "2.0 TSI, DSG, отличное состояние, обслужен до мелочей.", "/uploads/12.jpg"},
                     {"Porsche Cayenne S — Спорт и роскошь", "Cayenne 958.2", "2015", "33000", "+374 91 111 013", "3.6 Битурбо, пневмоподвеска, премиальная акустика Bose.", "/uploads/13.jpg"},
@@ -83,13 +105,50 @@ public class DataInitializer implements CommandLineRunner {
                 listing.setUser(admin);
                 listing.setStatus(ListingStatus.APPROVED);
 
+                // Добавляем основное фото
                 listing.getImages().add(data[6]);
+
+                // Добавляем 4 качественных детальных изображения (интерьер, панель, колесо, двигатель)
+                for (String detailName : DETAIL_IMAGE_NAMES) {
+                    listing.getImages().add("/uploads/" + detailName);
+                }
 
                 listingRepository.save(listing);
             }
-            System.out.println("✅ 30 новых объявлений успешно загружены!");
+            System.out.println("✅ 30 новых объявлений успешно загружены с 5 качественными фото каждое!");
         } else {
             System.out.println("ℹ️ База данных уже содержит объявления. Пропуск инициализации.");
+        }
+    }
+
+    private void initDetailImages(String uploadDir) {
+        new File(uploadDir).mkdirs();
+
+        for (int i = 0; i < DETAIL_IMAGE_URLS.length; i++) {
+            String targetFileName = DETAIL_IMAGE_NAMES[i];
+            File targetFile = new File(uploadDir + targetFileName);
+
+            if (targetFile.exists() && targetFile.length() > 0) {
+                continue; // Уже скачано ранее
+            }
+
+            System.out.println("📥 Скачивание тестового изображения " + targetFileName + "...");
+            try (InputStream in = new URL(DETAIL_IMAGE_URLS[i]).openStream()) {
+                Files.copy(in, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                System.out.println("✅ Сохранено в " + targetFile.getAbsolutePath());
+            } catch (Exception e) {
+                System.out.println("⚠️ Не удалось скачать " + targetFileName + " (" + e.getMessage() + "). Копируем заглушку...");
+                // Если не получилось скачать, берем local 1.jpg в качестве копии
+                File fallbackSource = new File(uploadDir + "1.jpg");
+                if (fallbackSource.exists()) {
+                    try {
+                        Files.copy(fallbackSource.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                        System.out.println("👉 Создана локальная копия из 1.jpg");
+                    } catch (Exception ex) {
+                        System.out.println("❌ Ошибка копирования заглушки: " + ex.getMessage());
+                    }
+                }
+            }
         }
     }
 }
