@@ -920,6 +920,8 @@
 
     // ── ФУНКЦИЯ ОБНОВЛЕНИЯ ОБЩЕГО СЧЕТЧИКА НА КНОПКЕ ──
     function updateUnreadCounter() {
+        const user = window.CURRENT_USER || 'anonymousUser';
+        if (user === 'anonymousUser') return;
         fetch('/api/chat/unread-count')
             .then(response => {
                 if (!response.ok) throw new Error('Unauthorized or error');
@@ -1031,8 +1033,10 @@
     });
 
     // Инициализация фоновых проверок при загрузке
-    updateUnreadCounter();
-    setInterval(updateUnreadCounter, 10000); // Раз в 10 секунд проверяем на новые сообщения
+    if (window.CURRENT_USER && window.CURRENT_USER !== 'anonymousUser') {
+        updateUnreadCounter();
+        setInterval(updateUnreadCounter, 10000); // Раз в 10 секунд проверяем на новые сообщения
+    }
 
     function toggleMobileMenu() {
         document.querySelector('.nav').classList.toggle('mobile-open');

@@ -165,6 +165,8 @@
         }
         
         function updateNavbarUnreadCount() {
+            const user = window.CURRENT_USER || 'anonymousUser';
+            if (user === 'anonymousUser') return;
             const badge = document.getElementById('navUnreadBadge');
             if (!badge) return;
             fetch('/api/chat/unread-count')
@@ -223,8 +225,10 @@
         // Initialize navbar
         updateThemeToggleButton();
         applyNavbarLang();
-        updateNavbarUnreadCount();
-        setInterval(updateNavbarUnreadCount, 10000);
+        if (window.CURRENT_USER && window.CURRENT_USER !== 'anonymousUser') {
+            updateNavbarUnreadCount();
+            setInterval(updateNavbarUnreadCount, 10000);
+        }
         
         // Storage change listener to keep tabs/modals in sync
         window.addEventListener('storage', (e) => {

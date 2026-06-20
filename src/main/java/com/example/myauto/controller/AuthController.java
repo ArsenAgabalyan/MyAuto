@@ -33,11 +33,15 @@ public class AuthController {
 
     @PostMapping("/register")
     public String registerUser(@ModelAttribute("user") User user) {
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            return "redirect:/auth/register?error=duplicate";
+        }
+
         // Устанавливаем базовую роль пользователя (раньше это делал UserService)
         user.setRole(Role.ROLE_USER);
 
         // Сохраняем напрямую в базу
         userRepository.save(user);
-        return "redirect:/auth/login";
+        return "redirect:/auth/login?registered";
     }
 }
