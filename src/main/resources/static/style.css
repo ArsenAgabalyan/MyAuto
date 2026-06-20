@@ -117,6 +117,18 @@ body {
     border-color: rgba(239, 68, 68, 0.25);
 }
 
+.nav-btn-outline {
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    background: transparent !important;
+}
+
+.nav-btn-outline:hover {
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
 .nav-back-btn {
     display: inline-flex;
     align-items: center;
