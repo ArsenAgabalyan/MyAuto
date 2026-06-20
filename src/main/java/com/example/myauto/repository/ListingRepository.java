@@ -12,6 +12,8 @@ import java.util.List;
 public interface ListingRepository extends JpaRepository<Listing, Long> {
     List<Listing> findAllByStatus(ListingStatus status);
 
+    List<Listing> findAllByOrderByIdDesc();
+
     // Поиск объявлений конкретного пользователя для личного кабинета
     List<Listing> findAllByUserOrderByCreatedAtDesc(User user);
 }

@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Модерация и управление — MyAuto</title>
     <link rel="stylesheet" href="/style.css">
     <style>
@@ -14,100 +15,633 @@
         }
         .tag-pending { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
         .tag-approved { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+        .tag-rejected { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+        body.dark-mode .tag-pending {
+            background: rgba(245, 158, 11, 0.15) !important;
+            color: #fbbf24 !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+        }
+        body.dark-mode .tag-approved {
+            background: rgba(16, 185, 129, 0.15) !important;
+            color: #34d399 !important;
+            border: 1px solid rgba(16, 185, 129, 0.3) !important;
+        }
+        body.dark-mode .tag-rejected {
+            background: rgba(239, 68, 68, 0.15) !important;
+            color: #f87171 !important;
+            border: 1px solid rgba(239, 68, 68, 0.3) !important;
+        }
+
+        .tab-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .tab-btn:hover {
+            background: #e2e8f0;
+            color: var(--dark);
+        }
+        .tab-btn.active {
+            background: var(--dark) !important;
+            color: var(--white) !important;
+            border-color: var(--dark) !important;
+        }
+
+        .tab-btn.tab-pending { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+        .tab-btn.tab-approved { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+        .tab-btn.tab-rejected { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+
+        body.dark-mode .tab-btn.tab-pending {
+            background: rgba(245, 158, 11, 0.15) !important;
+            color: #fbbf24 !important;
+            border-color: rgba(245, 158, 11, 0.3) !important;
+        }
+        body.dark-mode .tab-btn.tab-approved {
+            background: rgba(16, 185, 129, 0.15) !important;
+            color: #34d399 !important;
+            border-color: rgba(16, 185, 129, 0.3) !important;
+        }
+        body.dark-mode .tab-btn.tab-rejected {
+            background: rgba(239, 68, 68, 0.15) !important;
+            color: #f87171 !important;
+            border-color: rgba(239, 68, 68, 0.3) !important;
+        }
+
+        body.dark-mode .tab-btn:not(.active) {
+            background: #131b2e;
+            color: #94a3b8;
+            border-color: #22314d;
+        }
+        body.dark-mode .tab-btn:not(.active):hover {
+            background: #22314d;
+            color: #f1f5f9;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
 
-<nav class="nav">
-    <a class="nav-brand" href="/"><span>MY</span>AUTO</a>
-    <div class="nav-links">
-        <a href="/" class="btn btn-outline btn-sm">На главную</a>
-    </div>
-</nav>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
-<div class="page-wide">
-    <p class="page-title">🔍 Ожидают проверки (Модерация)</p>
-
-    <div th:if="${#lists.isEmpty(pendingCars)}" class="alert-ok" style="margin-bottom: 30px;">
-        🎉 Новых заявок на модерацию нет.
+<div class="page-wide" style="margin-top: 32px; margin-bottom: 64px;">
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 28px; flex-wrap:wrap; gap:16px;">
+        <div>
+            <h1 class="page-title" style="margin-bottom:4px; font-size:28px;">🛡️ <span data-i18n="moderationTitle">Панель модерации</span></h1>
+            <p style="color:var(--gray); font-size:14px; font-weight:500;" data-i18n="moderationSubtitle">Управление объявлениями и быстрая проверка</p>
+        </div>
+       
     </div>
 
-    <div class="card tbl-wrap" th:if="${!#lists.isEmpty(pendingCars)}" style="margin-bottom: 50px;">
+    <!-- Tabs & Bulk Actions Toolbar -->
+    <div class="card" style="padding:16px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; box-shadow: var(--shadow);">
+        <!-- Filter Tabs -->
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="tab-btn active" onclick="filterTable('ALL')" data-tab="ALL"><span data-i18n="tabAll">Все</span> (<span id="countAll">0</span>)</button>
+            <button class="tab-btn tab-pending" onclick="filterTable('PENDING')" data-tab="PENDING"><span data-i18n="tabPending">Ожидают</span> (<span id="countPending">0</span>)</button>
+            <button class="tab-btn tab-approved" onclick="filterTable('APPROVED')" data-tab="APPROVED"><span data-i18n="tabApproved">Одобрено</span> (<span id="countApproved">0</span>)</button>
+            <button class="tab-btn tab-rejected" onclick="filterTable('REJECTED')" data-tab="REJECTED"><span data-i18n="tabRejected">Отклонено</span> (<span id="countRejected">0</span>)</button>
+        </div>
+        
+        <!-- Bulk Actions -->
+        <div id="bulkActionsToolbar" style="display:flex; gap:12px; align-items:center;">
+            <span style="font-size:13px; color:var(--gray); font-weight:600;"><span id="checkedCount" style="color:var(--dark); font-weight:800;">0</span><span data-i18n="selectedCountLabel"> выбрано</span></span>
+            <button id="btnBulkApprove" class="btn btn-sm btn-ok" onclick="submitBulkApprove()" disabled style="opacity: 0.6; cursor: not-allowed; display:inline-flex; gap:6px; align-items:center; padding: 8px 16px; font-size:13px; font-weight:700;">
+                ✓ <span data-i18n="btnBulkApprove">Одобрить выбранные</span>
+            </button>
+            <button id="btnBulkDelete" class="btn btn-sm btn-del" onclick="submitBulkDelete()" disabled style="opacity: 0.6; cursor: not-allowed; display:inline-flex; gap:6px; align-items:center; padding: 8px 16px; font-size:13px; font-weight:700; background:#ef4444;">
+                🗑️ <span data-i18n="btnBulkDelete">Удалить выбранные</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Unified Dashboard Table -->
+    <div class="card tbl-wrap" style="box-shadow: var(--shadow);">
         <table>
             <thead>
             <tr>
-                <th>Фото</th>
-                <th>Заголовок</th>
-                <th>Продавец</th>
-                <th>Цена</th>
-                <th>Действия</th>
+                <th style="width: 48px; text-align:center;"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" style="width:18px; height:18px; cursor:pointer; vertical-align: middle;"></th>
+                <th style="width: 70px;" data-i18n="colId">ID</th>
+                <th style="width: 100px;" data-i18n="colPhoto">Фото</th>
+                <th data-i18n="colCar">Автомобиль</th>
+                <th data-i18n="colSeller">Продавец</th>
+                <th data-i18n="colPrice">Цена</th>
+                <th data-i18n="colStatus">Статус</th>
+                <th style="text-align:right;" data-i18n="colActions">Действия</th>
             </tr>
             </thead>
-            <tbody>
-            <tr th:each="car : ${pendingCars}">
-                <td>
-                    <img th:if="${!#lists.isEmpty(car.images)}" th:src="${car.images[0]}"
-                         style="width:70px;height:50px;object-fit:cover;border-radius:5px" alt="">
+            <tbody id="adminTableBody">
+            <tr th:each="car : ${allCars}" th:attr="data-status=${car.status.name()}" style="transition: var(--transition);">
+                <td style="text-align:center; vertical-align: middle;">
+                    <input type="checkbox" class="row-checkbox" th:value="${car.id}" onchange="updateBulkToolbar()" style="width:16px; height:16px; cursor:pointer; vertical-align: middle;">
                 </td>
-                <td>
-                    <div style="font-weight:600" th:text="${car.title}"></div>
-                    <div class="tag" th:text="${car.carModel} + ' (' + ${car.year} + ')'"></div>
+                <td class="tag" th:text="${car.id}" style="vertical-align: middle;"></td>
+                <td style="vertical-align: middle;">
+                    <img th:src="${!#lists.isEmpty(car.images) ? car.images[0] : '/images/no-photo.jpg'}"
+                         style="width:70px; height:50px; object-fit:cover; border-radius:6px; border: 1px solid var(--border);" alt="">
                 </td>
-                <td th:text="${car.user.username}"></td>
-                <td class="price" th:text="${car.price} + ' $'"></td>
-                <td>
-                    <div style="display:flex; gap:6px">
-                        <form th:action="@{/admin/listings/{id}/approve(id=${car.id})}" method="post">
-                            <button class="btn btn-ok btn-sm">Одобрить</button>
+                <td style="vertical-align: middle;">
+                    <div style="font-weight:700; color:var(--dark); font-size:15px;" th:text="${car.title}"></div>
+                    <div style="display:flex; gap:6px; align-items:center; margin-top:2px;">
+                        <span class="tag" th:text="${car.carModel} + ' (' + ${car.year} + ')'" style="font-size:11px; padding: 2px 6px;"></span>
+                        <span style="font-size:11px; color:var(--gray);" th:text="${#temporals.format(car.createdAt, 'dd.MM.yyyy HH:mm')}"></span>
+                    </div>
+                </td>
+                <td th:text="${car.user.username}" style="vertical-align: middle; font-weight:600; color:var(--text-muted);"></td>
+                <td class="price" th:text="${#numbers.formatDecimal(car.price, 0, 'WHITESPACE', 0, 'POINT')} + ' $'" style="vertical-align: middle; font-weight:800; font-size:15px; white-space: nowrap;"></td>
+                <td style="vertical-align: middle;">
+                    <span th:if="${car.status.name() == 'PENDING'}" class="status-tag tag-pending" data-i18n="tabPending">Ожидает</span>
+                    <span th:if="${car.status.name() == 'APPROVED'}" class="status-tag tag-approved" data-i18n="tabApproved">Одобрено</span>
+                    <span th:if="${car.status.name() == 'REJECTED'}" class="status-tag tag-rejected" data-i18n="tabRejected">Отклонено</span>
+                </td>
+                <td style="text-align:right; vertical-align: middle;">
+                    <div style="display:inline-flex; gap:6px; align-items:center;">
+                        <button class="btn btn-ghost btn-sm" th:onclick="'openPreviewModal(' + ${car.id} + ')'" style="font-weight:700; padding:6px 12px;" data-i18n="btnCheck">Проверить</button>
+                        
+                        <form th:action="@{/admin/listings/{id}/approve(id=${car.id})}" method="post" style="display:inline;" th:if="${car.status.name() != 'APPROVED'}">
+                            <button class="btn btn-ok btn-sm" style="padding:6px 12px; font-weight:700;" data-i18n="btnApprove">Одобрить</button>
                         </form>
-                        <a th:href="@{/listings/edit/{id}(id=${car.id})}" class="btn btn-ghost btn-sm">Правка</a>
-                        <form th:action="@{/admin/listings/{id}/reject(id=${car.id})}" method="post" onsubmit="return confirm('Удалить объявление?')">
-                            <button class="btn btn-del btn-sm">Удалить</button>
+                        
+                        <form th:action="@{/admin/listings/{id}/reject(id=${car.id})}" method="post" style="display:inline;" th:if="${car.status.name() != 'REJECTED'}">
+                            <button class="btn btn-reject-listing btn-sm" style="padding:6px 12px; font-weight:700;" data-i18n="btnReject">Отклонить</button>
+                        </form>
+                        
+                        <form th:action="@{/admin/listings/{id}/delete(id=${car.id})}" method="post" style="display:inline;" onsubmit="return confirmDelete()">
+                            <button class="btn btn-del btn-sm" style="padding:6px 12px; font-weight:700; background:#ef4444; color:white;" data-i18n="btnDelete">Удалить</button>
                         </form>
                     </div>
                 </td>
             </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <p class="page-title">🚗 Все опубликованные объявления</p>
-
-    <div class="card tbl-wrap">
-        <table>
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Заголовок</th>
-                <th>Продавец</th>
-                <th>Цена</th>
-                <th>Статус</th>
-                <th>Управление</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="car : ${approvedCars}">
-                <td class="tag" th:text="${car.id}"></td>
-                <td>
-                    <div style="font-weight:600" th:text="${car.title}"></div>
-                    <div class="tag" th:text="${car.carModel}"></div>
-                </td>
-                <td th:text="${car.user.username}"></td>
-                <td class="price" th:text="${car.price} + ' $'"></td>
-                <td><span class="status-tag tag-approved">Активно</span></td>
-                <td>
-                    <div style="display:flex; gap:6px">
-                        <a th:href="@{/listings/edit/{id}(id=${car.id})}" class="btn btn-ghost btn-sm">Редактировать</a>
-                        <form th:action="@{/admin/listings/{id}/reject(id=${car.id})}" method="post" onsubmit="return confirm('Удалить объявление навсегда?')">
-                            <button class="btn btn-del btn-sm">Удалить</button>
-                        </form>
-                    </div>
+            <!-- Empty state row -->
+            <tr id="emptyRow" style="display:none;">
+                <td colspan="8" style="text-align:center; padding:48px; color:var(--gray); font-weight:500;" data-i18n="noModerationCars">
+                    📭 Нет объявлений с таким статусом.
                 </td>
             </tr>
             </tbody>
         </table>
     </div>
 </div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<!-- Modal overlay for quick check detail preview -->
+<div id="previewModalOverlay" class="overlay" onclick="closePreviewModalOutside(event)">
+    <div class="modal-box wide" style="max-width: 900px; padding: 24px; border-radius: var(--radius-lg); background:var(--white); max-height:90vh; display:flex; flex-direction:column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);">
+        <button class="modal-close" onclick="closePreviewModal()">&times;</button>
+        <h3 class="modal-title" style="margin-bottom: 16px; padding-right:32px;" data-i18n="checkAdTitle">🔎 Проверка объявления</h3>
+        
+        <div id="previewModalBody" style="overflow-y:auto; flex-grow:1; padding-right:6px; margin-bottom:16px;">
+            <!-- Content is loaded here via AJAX -->
+        </div>
+    </div>
+</div>
+
+<!-- Thymeleaf Fragment: listingPreview -->
+<div th:fragment="listingPreview" class="preview-container" th:if="${car != null}">
+    <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap: 24px;">
+        <!-- Left Column: Gallery & Description -->
+        <div>
+            <!-- Main Image -->
+            <div style="width:100%; height:320px; border-radius:12px; overflow:hidden; border:1px solid var(--border); background:#f1f5f9; display:flex; align-items:center; justify-content:center; position:relative;">
+                <img id="modalMainImg" th:src="${!#lists.isEmpty(car.images) ? car.images[0] : '/images/no-photo.jpg'}" style="width:100%; height:100%; object-fit:cover;" alt="Car main image">
+            </div>
+            
+            <!-- Thumbnails -->
+            <div style="display:flex; gap:8px; margin-top:8px; overflow-x:auto; padding-bottom:4px;" th:if="${#lists.size(car.images) > 1}">
+                <img th:each="img, iter : ${car.images}" th:src="${img}" 
+                     th:class="${iter.index == 0} ? 'modal-thumb active' : 'modal-thumb'" 
+                     onclick="changeModalImage(this)"
+                     style="width:60px; height:45px; object-fit:cover; border-radius:4px; cursor:pointer; border:2px solid transparent; transition:var(--transition);" alt="Thumbnail">
+            </div>
+            
+            <!-- Description Box -->
+            <div style="margin-top:20px; background:var(--white); border:1px solid var(--border); padding:16px; border-radius:12px;">
+                <h4 style="font-weight:700; color:var(--dark); margin-bottom:8px; font-size:14px;" data-i18n="ownerDescription">Описание от владельца</h4>
+                <p th:text="${car.description}" style="font-size:13px; color:var(--text-muted); white-space:pre-wrap; line-height:1.6;"></p>
+            </div>
+        </div>
+        
+        <!-- Right Column: Specs table, badges, contact -->
+        <div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+                <div>
+                    <h2 th:text="${car.title}" style="font-size:22px; font-weight:800; color:var(--dark); letter-spacing:-0.5px; line-height:1.2;"></h2>
+                    <div style="font-size:14px; font-weight:600; color:var(--gray); margin-top:4px;" th:text="${car.carModel} + ' (' + ${car.year} + ' г.в.)'"></div>
+                </div>
+                <div style="font-size:22px; font-weight:900; color:var(--red); text-align:right; white-space: nowrap;" th:text="${#numbers.formatDecimal(car.price, 0, 'WHITESPACE', 0, 'POINT')} + ' $'"></div>
+            </div>
+            
+            <!-- Specs Table -->
+            <table class="tech-table" style="width:100%; margin-top:16px; border-collapse:collapse; font-size:13px;">
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:8px 0; color:var(--gray); font-weight:500;">Модель</td>
+                    <td style="padding:8px 0; text-align:right; font-weight:700; color:var(--dark);" th:text="${car.carModel}"></td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:8px 0; color:var(--gray); font-weight:500;">Год выпуска</td>
+                    <td style="padding:8px 0; text-align:right; font-weight:700; color:var(--dark);" th:text="${car.year}"></td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;" th:if="${car.mileage != null}">
+                    <td style="padding:8px 0; color:var(--gray); font-weight:500;">Пробег</td>
+                    <td style="padding:8px 0; text-align:right; font-weight:700; color:var(--dark);" th:text="${#numbers.formatDecimal(car.mileage, 0, 'WHITESPACE', 0, 'POINT')} + ' км'"></td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:8px 0; color:var(--gray); font-weight:500;">Состояние</td>
+                    <td style="padding:8px 0; text-align:right; font-weight:700; color:var(--dark);" th:text="${car.notBeaten} ? 'Не битое' : 'Битое'"></td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:8px 0; color:var(--gray); font-weight:500;">ГБО</td>
+                    <td style="padding:8px 0; text-align:right; font-weight:700; color:var(--dark);" th:text="${car.gasEquipment} ? 'Установлено' : 'Не установлено'"></td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;" th:if="${car.steeringWheel != null}">
+                    <td style="padding:8px 0; color:var(--gray); font-weight:500;">Руль</td>
+                    <td style="padding:8px 0; text-align:right; font-weight:700; color:var(--dark);" th:text="${car.steeringWheel == 'LEFT'} ? 'Слева' : 'Справа'"></td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:8px 0; color:var(--gray); font-weight:500;">Расценка</td>
+                    <td style="padding:8px 0; text-align:right; font-weight:700; color:var(--dark);" th:text="${car.pricing} ? 'Да' : 'Нет'"></td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:8px 0; color:var(--gray); font-weight:500;">Обмен</td>
+                    <td style="padding:8px 0; text-align:right; font-weight:700; color:var(--dark);" th:text="${car.exchange} ? 'Да' : 'Нет'"></td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:8px 0; color:var(--gray); font-weight:500;">Продавец</td>
+                    <td style="padding:8px 0; text-align:right; font-weight:700; color:var(--dark);" th:text="${car.user.username}"></td>
+                </tr>
+            </table>
+            
+            <!-- Specs Badges -->
+            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:16px;">
+                <span th:if="${car.notPainted}" style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">✓ Не крашена</span>
+                <span th:if="${car.owner}" style="background:#dcfce7; color:#15803d; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">✓ Собственник</span>
+                <span th:if="${car.serviceBook}" style="background:#fef9c3; color:#a16207; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">✓ Сервисная книжка</span>
+                <span th:if="${car.oneOwner}" style="background:#f3e8ff; color:#6b21a8; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">✓ Один владелец</span>
+                <span th:if="${car.originalMileage}" style="background:#ecfdf5; color:#047857; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">✓ Оригинальный пробег</span>
+                <span th:if="${car.garageStorage}" style="background:#fff7ed; color:#c2410c; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">✓ Гаражное хранение</span>
+                <span th:if="${car.keysSet}" style="background:#f0fdf4; color:#166534; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">✓ Полный комплект ключей</span>
+                <span th:if="${car.onWarranty}" style="background:#eff6ff; color:#1e40af; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">✓ На гарантии</span>
+                <span th:if="${car.noAccidents}" style="background:#ecfdf5; color:#065f46; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">✓ Без ДТП</span>
+                <span th:if="${car.dealerServiced}" style="background:#fdf2f8; color:#9d174d; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">✓ Обслуживалась у дилера</span>
+                <span th:if="${car.customsCleared}" style="background:#f0fdfa; color:#0f766e; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">✓ Растаможена</span>
+                <span th:if="${car.negotiable}" style="background:#fef2f2; color:#991b1b; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">✓ Возможен торг</span>
+                <span th:if="${car.noExchange}" style="background:#f1f5f9; color:#334155; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">✓ Обмен не интересует</span>
+                <span th:if="${car.urgentSale}" style="background:#fff1f2; color:#be123c; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">⚡ Срочная продажа</span>
+            </div>
+            
+            <!-- Contact Info -->
+            <div class="seller-phone-box" style="margin-top:16px;">
+                <span class="phone-label" data-i18n="sellerPhoneLabel">Телефон продавца</span>
+                <a th:href="'tel:' + ${car.contactPhone}" class="phone-link" th:text="${car.contactPhone}"></a>
+            </div>
+            
+            <!-- Modal Quick Moderation Actions -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:20px;">
+                <form th:action="@{/admin/listings/{id}/approve(id=${car.id})}" method="post">
+                    <button class="btn btn-ok" style="width:100%; font-weight:700; height:42px;">✓ <span data-i18n="btnApprove">Одобрить</span></button>
+                </form>
+                <form th:action="@{/admin/listings/{id}/reject(id=${car.id})}" method="post" th:if="${car.status.name() != 'REJECTED'}">
+                    <button class="btn btn-reject-listing" style="width:100%; font-weight:700; height:42px;">✗ <span data-i18n="btnReject">Отклонить</span></button>
+                </form>
+                <form th:action="@{/admin/listings/{id}/delete(id=${car.id})}" method="post" onsubmit="return confirmDelete()" style="grid-column: span 2;">
+                    <button class="btn btn-del" style="width:100%; font-weight:700; height:42px; background:#ef4444; color:white;">🗑️ <span data-i18n="btnDeletePermanently">Удалить навсегда</span></button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        .modal-thumb {
+            border: 2px solid transparent;
+            opacity: 0.7;
+        }
+        .modal-thumb:hover {
+            opacity: 1;
+        }
+        .modal-thumb.active {
+            border-color: var(--red) !important;
+            opacity: 1;
+        }
+    </style>
+</div>
+
+<!-- Hidden Bulk Action Form -->
+<form id="bulkForm" method="post" style="display:none;">
+    <input type="hidden" name="ids" id="bulkIdsInput">
+</form>
+
+<script>
+    const T_MODERATION = {
+        ru: {
+            moderationSubtitle: 'Управление объявлениями и быстрая проверка',
+            selectedCountLabel: ' выбрано',
+            colId: 'ID',
+            colSeller: 'Продавец',
+            colActions: 'Действия',
+            noModerationCars: '📭 Нет объявлений с таким статусом.',
+            checkAdTitle: '🔎 Проверка объявления',
+            loadingDetails: 'Загрузка информации...',
+            errorLoading: 'Ошибка загрузки деталей объявления. Попробуйте еще раз.',
+            ownerDescription: 'Описание от владельца',
+            yearSuffixModal: ' г.в.)',
+            specModel: 'Модель',
+            specYear: 'Год выпуска',
+            specMileage: 'Пробег',
+            specCondition: 'Состояние',
+            specGas: 'ГБО',
+            specSteering: 'Руль',
+            specPricing: 'Расценка',
+            specExchange: 'Обмен',
+            specSeller: 'Продавец',
+            kmSuffix: ' км',
+            sellerPhoneLabel: 'Телефон продавца',
+            btnDeletePermanently: 'Удалить навсегда'
+        },
+        en: {
+            moderationSubtitle: 'Manage listings and quick review checks',
+            selectedCountLabel: ' selected',
+            colId: 'ID',
+            colSeller: 'Seller',
+            colActions: 'Actions',
+            noModerationCars: '📭 No listings with this status.',
+            checkAdTitle: '🔎 Check Listing',
+            loadingDetails: 'Loading details...',
+            errorLoading: 'Error loading listing details. Please try again.',
+            ownerDescription: "Owner's Description",
+            yearSuffixModal: ' yr)',
+            specModel: 'Model',
+            specYear: 'Year of manufacture',
+            specMileage: 'Mileage',
+            specCondition: 'Condition',
+            specGas: 'Gas Equipment',
+            specSteering: 'Steering Wheel',
+            specPricing: 'Pricing',
+            specExchange: 'Exchange',
+            specSeller: 'Seller',
+            kmSuffix: ' km',
+            sellerPhoneLabel: "Seller's phone",
+            btnDeletePermanently: 'Delete permanently'
+        },
+        hy: {
+            moderationSubtitle: 'Հայտարարությունների կառավարում և արագ ստուգում',
+            selectedCountLabel: ' ընտրված է',
+            colId: 'ID',
+            colSeller: 'Վաճառող',
+            colActions: 'Գործողություններ',
+            noModerationCars: '📭 Այս կարգավիճակով հայտարարություններ չկան:',
+            checkAdTitle: '🔎 Հայտարարության ստուգում',
+            loadingDetails: 'Տվյալների բեռնում...',
+            errorLoading: 'Հայտարարության տվյալների բեռնման սխալ: Կրկին փորձեք:',
+            ownerDescription: 'Նկարագրություն սեփականատիրոջից',
+            yearSuffixModal: ' թ.)',
+            specModel: 'Մոդել',
+            specYear: 'Տարեթիվ',
+            specMileage: 'Վազք',
+            specCondition: 'Վիճակ',
+            specGas: 'Գազի համակարգ',
+            specSteering: 'Ղեկ',
+            specPricing: 'Գնահատում',
+            specExchange: 'Փոխանակում',
+            specSeller: 'Վաճառող',
+            kmSuffix: ' կմ',
+            sellerPhoneLabel: 'Վաճառողի հեռախոս',
+            btnDeletePermanently: 'Ջնջել ընդմիշտ'
+        }
+    };
+
+    // Calculate counts on load
+    document.addEventListener("DOMContentLoaded", function() {
+        updateCounts();
+        updateBulkToolbar();
+        applyLang();
+    });
+
+    function applyLang() {
+        const lang = localStorage.getItem('ma_lang') || 'ru';
+        
+        // Document title translation
+        const titles = {
+            ru: 'Модерация и управление — MyAuto',
+            en: 'Moderation & Management — MyAuto',
+            hy: 'Մոդերացիա և Կառավարում — MyAuto'
+        };
+        document.title = titles[lang] || titles.ru;
+
+        // Apply navbar translation if available
+        if (typeof applyNavbarLang === 'function') {
+            applyNavbarLang();
+        }
+
+        // Apply local translation
+        const tLocal = T_MODERATION[lang] || T_MODERATION.ru;
+        const tGlobal = (typeof T_GLOBAL !== 'undefined') ? T_GLOBAL[lang] : null;
+
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.dataset.i18n;
+            if (tLocal[key] !== undefined) {
+                el.textContent = tLocal[key];
+            } else if (tGlobal && tGlobal[key] !== undefined) {
+                el.textContent = tGlobal[key];
+            }
+        });
+    }
+
+    function confirmDelete() {
+        const lang = localStorage.getItem('ma_lang') || 'ru';
+        const msg = {
+            ru: 'Удалить объявление навсегда?',
+            en: 'Delete this listing permanently?',
+            hy: 'Ջնջե՞լ հայտարարությունը ընդմիշտ:'
+        };
+        return confirm(msg[lang] || msg.ru);
+    }
+
+    function updateCounts() {
+        const rows = document.querySelectorAll("#adminTableBody tr:not(#emptyRow)");
+        let all = 0, pending = 0, approved = 0, rejected = 0;
+        
+        rows.forEach(row => {
+            all++;
+            const status = row.getAttribute("data-status");
+            if (status === "PENDING") pending++;
+            else if (status === "APPROVED") approved++;
+            else if (status === "REJECTED") rejected++;
+        });
+        
+        document.getElementById("countAll").textContent = all;
+        document.getElementById("countPending").textContent = pending;
+        document.getElementById("countApproved").textContent = approved;
+        document.getElementById("countRejected").textContent = rejected;
+    }
+
+    let currentFilter = 'ALL';
+
+    function filterTable(status) {
+        currentFilter = status;
+        
+        // Update active tab styling
+        document.querySelectorAll(".tab-btn").forEach(btn => {
+            if (btn.getAttribute("data-tab") === status) {
+                btn.classList.add("active");
+            } else {
+                btn.classList.remove("active");
+            }
+        });
+        
+        const rows = document.querySelectorAll("#adminTableBody tr:not(#emptyRow)");
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+            const rowStatus = row.getAttribute("data-status");
+            if (status === "ALL" || rowStatus === status) {
+                row.style.display = "";
+                visibleCount++;
+            } else {
+                row.style.display = "none";
+                // Uncheck hidden rows
+                const cb = row.querySelector(".row-checkbox");
+                if (cb) cb.checked = false;
+            }
+        });
+        
+        document.getElementById("emptyRow").style.display = (visibleCount === 0) ? "" : "none";
+        
+        // Reset select all checkbox and update toolbar
+        document.getElementById("selectAllCheckbox").checked = false;
+        updateBulkToolbar();
+    }
+
+    function toggleSelectAll(selectAllCb) {
+        const rows = document.querySelectorAll("#adminTableBody tr:not(#emptyRow)");
+        rows.forEach(row => {
+            // Only select rows that are currently visible under the active filter
+            if (row.style.display !== "none") {
+                const cb = row.querySelector(".row-checkbox");
+                if (cb) cb.checked = selectAllCb.checked;
+            }
+        });
+        updateBulkToolbar();
+    }
+
+    function updateBulkToolbar() {
+        const checkedBoxes = document.querySelectorAll(".row-checkbox:checked");
+        const count = checkedBoxes.length;
+        
+        document.getElementById("checkedCount").textContent = count;
+        
+        const btnApprove = document.getElementById("btnBulkApprove");
+        const btnDelete = document.getElementById("btnBulkDelete");
+        
+        if (count > 0) {
+            btnApprove.disabled = false;
+            btnApprove.style.opacity = "1";
+            btnApprove.style.cursor = "pointer";
+            
+            btnDelete.disabled = false;
+            btnDelete.style.opacity = "1";
+            btnDelete.style.cursor = "pointer";
+        } else {
+            btnApprove.disabled = true;
+            btnApprove.style.opacity = "0.6";
+            btnApprove.style.cursor = "not-allowed";
+            
+            btnDelete.disabled = true;
+            btnDelete.style.opacity = "0.6";
+            btnDelete.style.cursor = "not-allowed";
+        }
+    }
+
+    function submitBulkApprove() {
+        const checkedBoxes = document.querySelectorAll(".row-checkbox:checked");
+        const ids = Array.from(checkedBoxes).map(cb => cb.value);
+        if (ids.length === 0) return;
+        
+        const lang = localStorage.getItem('ma_lang') || 'ru';
+        const msg = {
+            ru: "Одобрить выбранные объявления (" + ids.length + " шт.)?",
+            en: "Approve selected listings (" + ids.length + " pcs.)?",
+            hy: "Հաստատե՞լ ընտրված հայտարարությունները (" + ids.length + " հատ):"
+        };
+        
+        if (confirm(msg[lang] || msg.ru)) {
+            const form = document.getElementById("bulkForm");
+            form.action = "/admin/listings/bulk-approve";
+            document.getElementById("bulkIdsInput").value = ids.join(",");
+            form.submit();
+        }
+    }
+
+    function submitBulkDelete() {
+        const checkedBoxes = document.querySelectorAll(".row-checkbox:checked");
+        const ids = Array.from(checkedBoxes).map(cb => cb.value);
+        if (ids.length === 0) return;
+        
+        const lang = localStorage.getItem('ma_lang') || 'ru';
+        const msg = {
+            ru: "Удалить выбранные объявления (" + ids.length + " шт.) навсегда?",
+            en: "Delete selected listings (" + ids.length + " pcs.) permanently?",
+            hy: "Ջնջե՞լ ընտրված հայտարարությունները (" + ids.length + " հատ) ընդմիշտ:"
+        };
+        
+        if (confirm(msg[lang] || msg.ru)) {
+            const form = document.getElementById("bulkForm");
+            form.action = "/admin/listings/bulk-delete";
+            document.getElementById("bulkIdsInput").value = ids.join(",");
+            form.submit();
+        }
+    }
+
+    function openPreviewModal(id) {
+        const body = document.getElementById("previewModalBody");
+        const lang = localStorage.getItem('ma_lang') || 'ru';
+        const tLocal = T_MODERATION[lang] || T_MODERATION.ru;
+        
+        body.innerHTML = '<div style="text-align:center; padding:50px; color:var(--gray);"><span style="display:inline-block; animation: spin 1s linear infinite; font-size: 24px; margin-bottom: 12px;">⏳</span><div>' + tLocal.loadingDetails + '</div></div>';
+        
+        document.getElementById("previewModalOverlay").classList.add("open");
+        
+        fetch("/admin/listings/" + id + "/preview")
+            .then(res => {
+                if (!res.ok) throw new Error();
+                return res.text();
+            })
+            .then(html => {
+                body.innerHTML = html;
+                applyLang(); // Re-apply localization on dynamic content loaded via AJAX
+            })
+            .catch(err => {
+                body.innerHTML = '<div style="text-align:center; padding:50px; color:#ef4444; font-weight:600;">' + tLocal.errorLoading + '</div>';
+            });
+    }
+
+    function closePreviewModal() {
+        document.getElementById("previewModalOverlay").classList.remove("open");
+    }
+
+    function closePreviewModalOutside(event) {
+        if (event.target === document.getElementById("previewModalOverlay")) {
+            closePreviewModal();
+        }
+    }
+
+    function changeModalImage(thumb) {
+        document.getElementById("modalMainImg").src = thumb.src;
+        document.querySelectorAll(".modal-thumb").forEach(img => img.classList.remove("active"));
+        thumb.classList.add("active");
+    }
+</script>
 
 </body>
 </html>

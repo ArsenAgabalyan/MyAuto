@@ -2,10 +2,12 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход — MyAuto</title>
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 <div class="page">
     <div class="auth-logo">
         <h1><span>MY</span>AUTO</h1>
@@ -17,6 +19,9 @@
         </div>
         <div th:if="${param.logout}" style="background:#d1fae5;border:1px solid #6ee7b7;color:#065f46;border-radius:7px;padding:10px 14px;font-size:13px;margin-bottom:16px">
             ✓ Вы вышли из системы
+        </div>
+        <div th:if="${param.registered}" style="background:#d1fae5;border:1px solid #6ee7b7;color:#065f46;border-radius:7px;padding:10px 14px;font-size:13px;margin-bottom:16px">
+            ✓ Регистрация прошла успешно! Теперь вы можете войти
         </div>
         <form th:action="@{/auth/login}" method="post">
             <div class="field">

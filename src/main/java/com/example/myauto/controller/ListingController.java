@@ -67,12 +67,19 @@ public class ListingController {
     }
 
     @PostMapping("/edit/{id}")
-    public String updateListing(@PathVariable Long id, @ModelAttribute("listing") Listing updatedData, Principal principal) {
+    public String updateListing(@PathVariable Long id,
+                                @ModelAttribute("listing") Listing updatedData,
+                                @RequestParam(value = "imageFiles", required = false) MultipartFile[] files,
+                                Principal principal) {
         User currentUser = userRepository.findByUsername(principal.getName()).orElseThrow();
-        boolean isAdmin = (currentUser.getRole() == Role.ROLE_ADMIN);
-
-        // Вся логика из Service теперь здесь:
         Listing listing = listingRepository.findById(id).orElseThrow();
+
+        // Проверка прав: обновить может только владелец или администратор
+        if (!listing.getUser().getUsername().equals(principal.getName()) && currentUser.getRole() != Role.ROLE_ADMIN) {
+            return "redirect:/";
+        }
+
+        boolean isAdmin = (currentUser.getRole() == Role.ROLE_ADMIN);
 
         listing.setTitle(updatedData.getTitle());
         listing.setCarModel(updatedData.getCarModel());
@@ -80,6 +87,40 @@ public class ListingController {
         listing.setPrice(updatedData.getPrice());
         listing.setContactPhone(updatedData.getContactPhone());
         listing.setDescription(updatedData.getDescription());
+        listing.setNotBeaten(updatedData.isNotBeaten());
+        listing.setNotPainted(updatedData.isNotPainted());
+        listing.setOwner(updatedData.isOwner());
+        listing.setServiceBook(updatedData.isServiceBook());
+
+        // Copy new fields
+        listing.setMileage(updatedData.getMileage());
+        listing.setGasEquipment(updatedData.isGasEquipment());
+        listing.setSteeringWheel(updatedData.getSteeringWheel());
+        listing.setPricing(updatedData.isPricing());
+        listing.setExchange(updatedData.isExchange());
+
+        listing.setOneOwner(updatedData.isOneOwner());
+        listing.setOriginalMileage(updatedData.isOriginalMileage());
+        listing.setGarageStorage(updatedData.isGarageStorage());
+        listing.setKeysSet(updatedData.isKeysSet());
+        listing.setOnWarranty(updatedData.isOnWarranty());
+        listing.setNoAccidents(updatedData.isNoAccidents());
+        listing.setDealerServiced(updatedData.isDealerServiced());
+        listing.setCustomsCleared(updatedData.isCustomsCleared());
+        listing.setNegotiable(updatedData.isNegotiable());
+        listing.setNoExchange(updatedData.isNoExchange());
+        listing.setUrgentSale(updatedData.isUrgentSale());
+
+        // Update with remaining images list safely
+        listing.getImages().clear();
+        if (updatedData.getImages() != null) {
+            listing.getImages().addAll(updatedData.getImages());
+        }
+
+        // Append new uploads
+        if (files != null) {
+            handleFiles(listing, files);
+        }
 
         // Если правит не админ — отправляем на модерацию
         if (!isAdmin) {
@@ -129,12 +170,38 @@ public class ListingController {
         String uploadDir = System.getProperty("user.dir") + "/uploads/";
         new File(uploadDir).mkdirs();
 
+        int currentCount = listing.getImages().size();
         for (MultipartFile file : files) {
             if (!file.isEmpty()) {
+                if (currentCount >= 10) break; // Maximum 10 images limit
+                
+                // Maximum 10 MB limit (10 * 1024 * 1024 bytes)
+                if (file.getSize() > 10 * 1024 * 1024) {
+                    continue; // Skip files larger than 10MB
+                }
+
+                // Check content type (must be image/jpeg or image/png)
+                String contentType = file.getContentType();
+                String fileName = file.getOriginalFilename();
+                boolean isValidFormat = false;
+                if (contentType != null && (contentType.equals("image/jpeg") || contentType.equals("image/png"))) {
+                    isValidFormat = true;
+                } else if (fileName != null) {
+                    String lowerName = fileName.toLowerCase();
+                    if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") || lowerName.endsWith(".png")) {
+                        isValidFormat = true;
+                    }
+                }
+
+                if (!isValidFormat) {
+                    continue; // Skip invalid format files
+                }
+
                 try {
                     String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
                     Files.write(Paths.get(uploadDir + uniqueFileName), file.getBytes());
                     listing.getImages().add("/uploads/" + uniqueFileName);
+                    currentCount++;
                 } catch (IOException e) { e.printStackTrace(); }
             }
         }

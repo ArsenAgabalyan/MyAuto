@@ -27,4 +27,14 @@ public class MainController {
         model.addAttribute("user", new User());
         return "index";
     }
+
+    @GetMapping("/login")
+    public String redirectToLogin() {
+        return "redirect:/auth/login";
+    }
+
+    @GetMapping("/register")
+    public String redirectToRegister() {
+        return "redirect:/auth/register";
+    }
 }

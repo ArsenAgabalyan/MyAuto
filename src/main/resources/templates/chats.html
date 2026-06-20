@@ -6,6 +6,7 @@
     <title>Мои диалоги</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/style.css">
 
     <style>
         :root {
@@ -74,7 +75,9 @@
 </head>
 <body>
 
-<div class="container py-5">
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<div class="container py-5" style="margin-top: 20px;">
     <div class="row justify-content-center">
         <div class="col-md-9">
 
@@ -94,7 +97,7 @@
             <div th:unless="${#lists.isEmpty(chats)}" class="d-flex flex-column gap-3">
 
                 <a th:each="chatItem : ${chats}"
-                   th:href="@{/chat/{id}(id=${chatItem.listing.id})}"
+                   th:href="@{/chat/{id}(id=${chatItem.listing.id}, buyer=${chatItem.buyer.username})}"
                    class="chat-card p-3 shadow-sm">
 
                     <div class="d-flex align-items-center justify-content-between">
@@ -108,7 +111,7 @@
                                 <h6 class="mb-1 fw-bold text-dark" th:text="${chatItem.listing.title}">Марка авто</h6>
                                 <div class="small text-muted">
                                     <i class="bi bi-person me-1"></i>
-                                    Продавец: <span th:text="${chatItem.listing.user.username}">Seller</span>
+                                    Собеседник: <span th:text="${chatItem.interlocutor}">Interlocutor</span>
                                 </div>
                             </div>
                         </div>
@@ -133,5 +136,8 @@
     </div>
 </div>
 
+<script>
+    // Navbar helpers are handled by the navbar fragment.
+</script>
 </body>
 </html>

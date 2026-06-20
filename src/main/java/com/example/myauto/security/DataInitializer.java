@@ -1,10 +1,17 @@
-package com.example.myauto.security; // Убедитесь, что package совпадает с вашим
+package com.example.myauto.security;
 
 import com.example.myauto.entity.*;
 import com.example.myauto.repository.ListingRepository;
 import com.example.myauto.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+
+import java.io.File;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -29,14 +36,15 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("✅ Администратор создан — логин: admin, пароль: admin");
         }
 
-        // 2. ИСПРАВЛЕНО: Добавляем машины ТОЛЬКО если база данных пуста
+        String uploadDir = System.getProperty("user.dir") + "/uploads/";
+
+        // 2. Добавляем машины ТОЛЬКО если база данных пуста
         if (listingRepository.count() == 0) {
             System.out.println("🔄 База данных пуста. Заполнение тестовыми данными...");
 
             User admin = userRepository.findByUsername("admin").orElseThrow();
 
             String[][] cars = {
-                    // Оригинальные 10 машин
                     {"Toyota Camry 2020 — отличное состояние", "Camry V70", "2020", "18500", "+374 91 111 001", "Идеальное состояние, не бита, не крашена.", "/uploads/1.jpg"},
                     {"Skoda Octavia — практичный и вместительный", "Octavia A8", "2022", "19900", "+374 91 111 002", "Бензин 1.5 TSI, АКПП. Как новый.", "/uploads/2.jpg"},
                     {"Nissan Qashqai — городской кроссовер", "Qashqai J12", "2021", "20500", "+374 91 111 003", "Гибрид e-Power, передний привод. Пробег 29 000 км.", "/uploads/3.jpg"},
@@ -47,8 +55,6 @@ public class DataInitializer implements CommandLineRunner {
                     {"Hyundai Tucson", "Tucson NX4", "2022", "26000", "+374 91 111 008", "Официальный дилер, на гарантии, 1 владелец.", "/uploads/8.jpg"},
                     {"Kia Sportage X-Line", "Sportage NQ5", "2023", "28000", "+374 91 111 009", "Новый автомобиль, без пробега. Самая полная комплектация X-Line.", "/uploads/9.jpg"},
                     {"Honda Civic Sport", "Civic X", "2019", "16500", "+374 91 111 010", "1.5 турбо, спортивная подвеска, отличная динамика.", "/uploads/10.jpg"},
-
-                    // Дополнительные 20 машин
                     {"Ford Mustang GT — Американская мускулатура", "Mustang VI", "2017", "24500", "+374 91 111 011", "5.0 V8 Coyote, легендарный звук, задний привод, механика.", "/uploads/11.jpg"},
                     {"Volkswagen Golf GTI — Заряженный хэтчбек", "Golf VII GTI", "2016", "15800", "+374 91 111 012", "2.0 TSI, DSG, отличное состояние, обслужен до мелочей.", "/uploads/12.jpg"},
                     {"Porsche Cayenne S — Спорт и роскошь", "Cayenne 958.2", "2015", "33000", "+374 91 111 013", "3.6 Битурбо, пневмоподвеска, премиальная акустика Bose.", "/uploads/13.jpg"},
@@ -83,13 +89,67 @@ public class DataInitializer implements CommandLineRunner {
                 listing.setUser(admin);
                 listing.setStatus(ListingStatus.APPROVED);
 
+                // Добавляем основное фото
                 listing.getImages().add(data[6]);
+
+                // Ищем дополнительные фото в папке uploads (например, 1_1.jpg для 1.jpg)
+                String mainImagePath = data[6];
+                String mainImageName = mainImagePath.substring(mainImagePath.lastIndexOf("/") + 1);
+                int dotIndex = mainImageName.lastIndexOf('.');
+                String baseName = dotIndex > 0 ? mainImageName.substring(0, dotIndex) : mainImageName;
+
+                File uploadFolder = new File(uploadDir);
+                File[] matchingFiles = uploadFolder.listFiles((dir, name) -> 
+                    name.startsWith(baseName + "_") && (name.toLowerCase().endsWith(".jpg") || name.toLowerCase().endsWith(".jpeg") || name.toLowerCase().endsWith(".png"))
+                );
+
+                if (matchingFiles != null && matchingFiles.length > 0) {
+                    java.util.Arrays.sort(matchingFiles);
+                    for (File file : matchingFiles) {
+                        listing.getImages().add("/uploads/" + file.getName());
+                    }
+                }
 
                 listingRepository.save(listing);
             }
             System.out.println("✅ 30 новых объявлений успешно загружены!");
         } else {
-            System.out.println("ℹ️ База данных уже содержит объявления. Пропуск инициализации.");
+            System.out.println("ℹ️ База данных уже содержит объявления. Синхронизация кастомных изображений...");
+            User admin = userRepository.findByUsername("admin").orElse(null);
+            if (admin != null) {
+                java.util.List<Listing> listings = listingRepository.findAllByUserOrderByCreatedAtDesc(admin);
+                for (Listing listing : listings) {
+                    if (listing.getImages() != null && !listing.getImages().isEmpty()) {
+                        String mainImagePath = listing.getImages().get(0);
+                        String mainImageName = mainImagePath.substring(mainImagePath.lastIndexOf("/") + 1);
+                        
+                        // Проверяем, что картинка относится к стандартным (например, 1.jpg, 2.jpg)
+                        if (mainImageName.matches("^\\d+\\.\\w+$")) {
+                            int dotIndex = mainImageName.lastIndexOf('.');
+                            String baseName = dotIndex > 0 ? mainImageName.substring(0, dotIndex) : mainImageName;
+
+                            File uploadFolder = new File(uploadDir);
+                            File[] matchingFiles = uploadFolder.listFiles((dir, name) -> 
+                                name.startsWith(baseName + "_") && (name.toLowerCase().endsWith(".jpg") || name.toLowerCase().endsWith(".jpeg") || name.toLowerCase().endsWith(".png"))
+                            );
+
+                            java.util.List<String> newImages = new java.util.ArrayList<>();
+                            newImages.add(mainImagePath);
+
+                            if (matchingFiles != null && matchingFiles.length > 0) {
+                                java.util.Arrays.sort(matchingFiles);
+                                for (File file : matchingFiles) {
+                                    newImages.add("/uploads/" + file.getName());
+                                }
+                            }
+
+                            listing.setImages(newImages);
+                            listingRepository.save(listing);
+                        }
+                    }
+                }
+                System.out.println("✅ Кастомные изображения успешно синхронизированы!");
+            }
         }
     }
 }

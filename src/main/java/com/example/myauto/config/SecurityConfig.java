@@ -15,14 +15,20 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        org.springframework.security.web.savedrequest.HttpSessionRequestCache requestCache = new org.springframework.security.web.savedrequest.HttpSessionRequestCache();
+        requestCache.setRequestMatcher(request -> !request.getRequestURI().startsWith("/api/"));
+
         http
                 .csrf(csrf -> csrf.disable())
+                .requestCache(cache -> cache.requestCache(requestCache))
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
-                        .requestMatchers("/", "/auth/login", "/auth/register", "/error").permitAll()
+                        .requestMatchers("/", "/auth/login", "/auth/register", "/login", "/register", "/error").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**", "/*.css", "/*.js").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/listings/add", "/listings/edit/**", "/listings/delete/**", "/listings/approve/**").authenticated()
+                        .requestMatchers("/listings/{id}").permitAll()
 
                         // Доступ к профилю только авторизованным
                         .requestMatchers("/profile/**").authenticated()
@@ -32,7 +38,7 @@ public class SecurityConfig {
                 .formLogin(form -> form
                         .loginPage("/auth/login")
                         .loginProcessingUrl("/auth/login")
-                        .defaultSuccessUrl("/", true)
+                        .defaultSuccessUrl("/", false)
                         .permitAll()
                 )
                 .logout(logout -> logout
