@@ -19,20 +19,6 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final ListingRepository listingRepository;
 
-    private static final String[] DETAIL_IMAGE_URLS = {
-            "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=1080", // Interior
-            "https://images.unsplash.com/photo-1502877338535-766e1452684a?w=1080", // Dashboard
-            "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=1080", // Wheel
-            "https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=1080"  // Engine
-    };
-
-    private static final String[] DETAIL_IMAGE_NAMES = {
-            "detail_interior.jpg",
-            "detail_dashboard.jpg",
-            "detail_wheel.jpg",
-            "detail_engine.jpg"
-    };
-
     public DataInitializer(UserRepository userRepository, ListingRepository listingRepository) {
         this.userRepository = userRepository;
         this.listingRepository = listingRepository;
@@ -50,15 +36,13 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("✅ Администратор создан — логин: admin, пароль: admin");
         }
 
+        String uploadDir = System.getProperty("user.dir") + "/uploads/";
+
         // 2. Добавляем машины ТОЛЬКО если база данных пуста
         if (listingRepository.count() == 0) {
             System.out.println("🔄 База данных пуста. Заполнение тестовыми данными...");
 
             User admin = userRepository.findByUsername("admin").orElseThrow();
-            String uploadDir = System.getProperty("user.dir") + "/uploads/";
-
-            // Скачиваем или создаем детальные изображения
-            initDetailImages(uploadDir);
 
             String[][] cars = {
                     {"Toyota Camry 2020 — отличное состояние", "Camry V70", "2020", "18500", "+374 91 111 001", "Идеальное состояние, не бита, не крашена.", "/uploads/1.jpg"},
@@ -108,46 +92,63 @@ public class DataInitializer implements CommandLineRunner {
                 // Добавляем основное фото
                 listing.getImages().add(data[6]);
 
-                // Добавляем 4 качественных детальных изображения (интерьер, панель, колесо, двигатель)
-                for (String detailName : DETAIL_IMAGE_NAMES) {
-                    listing.getImages().add("/uploads/" + detailName);
+                // Ищем дополнительные фото в папке uploads (например, 1_1.jpg для 1.jpg)
+                String mainImagePath = data[6];
+                String mainImageName = mainImagePath.substring(mainImagePath.lastIndexOf("/") + 1);
+                int dotIndex = mainImageName.lastIndexOf('.');
+                String baseName = dotIndex > 0 ? mainImageName.substring(0, dotIndex) : mainImageName;
+
+                File uploadFolder = new File(uploadDir);
+                File[] matchingFiles = uploadFolder.listFiles((dir, name) -> 
+                    name.startsWith(baseName + "_") && (name.toLowerCase().endsWith(".jpg") || name.toLowerCase().endsWith(".jpeg") || name.toLowerCase().endsWith(".png"))
+                );
+
+                if (matchingFiles != null && matchingFiles.length > 0) {
+                    java.util.Arrays.sort(matchingFiles);
+                    for (File file : matchingFiles) {
+                        listing.getImages().add("/uploads/" + file.getName());
+                    }
                 }
 
                 listingRepository.save(listing);
             }
-            System.out.println("✅ 30 новых объявлений успешно загружены с 5 качественными фото каждое!");
+            System.out.println("✅ 30 новых объявлений успешно загружены!");
         } else {
-            System.out.println("ℹ️ База данных уже содержит объявления. Пропуск инициализации.");
-        }
-    }
+            System.out.println("ℹ️ База данных уже содержит объявления. Синхронизация кастомных изображений...");
+            User admin = userRepository.findByUsername("admin").orElse(null);
+            if (admin != null) {
+                java.util.List<Listing> listings = listingRepository.findAllByUserOrderByCreatedAtDesc(admin);
+                for (Listing listing : listings) {
+                    if (listing.getImages() != null && !listing.getImages().isEmpty()) {
+                        String mainImagePath = listing.getImages().get(0);
+                        String mainImageName = mainImagePath.substring(mainImagePath.lastIndexOf("/") + 1);
+                        
+                        // Проверяем, что картинка относится к стандартным (например, 1.jpg, 2.jpg)
+                        if (mainImageName.matches("^\\d+\\.\\w+$")) {
+                            int dotIndex = mainImageName.lastIndexOf('.');
+                            String baseName = dotIndex > 0 ? mainImageName.substring(0, dotIndex) : mainImageName;
 
-    private void initDetailImages(String uploadDir) {
-        new File(uploadDir).mkdirs();
+                            File uploadFolder = new File(uploadDir);
+                            File[] matchingFiles = uploadFolder.listFiles((dir, name) -> 
+                                name.startsWith(baseName + "_") && (name.toLowerCase().endsWith(".jpg") || name.toLowerCase().endsWith(".jpeg") || name.toLowerCase().endsWith(".png"))
+                            );
 
-        for (int i = 0; i < DETAIL_IMAGE_URLS.length; i++) {
-            String targetFileName = DETAIL_IMAGE_NAMES[i];
-            File targetFile = new File(uploadDir + targetFileName);
+                            java.util.List<String> newImages = new java.util.ArrayList<>();
+                            newImages.add(mainImagePath);
 
-            if (targetFile.exists() && targetFile.length() > 0) {
-                continue; // Уже скачано ранее
-            }
+                            if (matchingFiles != null && matchingFiles.length > 0) {
+                                java.util.Arrays.sort(matchingFiles);
+                                for (File file : matchingFiles) {
+                                    newImages.add("/uploads/" + file.getName());
+                                }
+                            }
 
-            System.out.println("📥 Скачивание тестового изображения " + targetFileName + "...");
-            try (InputStream in = new URL(DETAIL_IMAGE_URLS[i]).openStream()) {
-                Files.copy(in, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                System.out.println("✅ Сохранено в " + targetFile.getAbsolutePath());
-            } catch (Exception e) {
-                System.out.println("⚠️ Не удалось скачать " + targetFileName + " (" + e.getMessage() + "). Копируем заглушку...");
-                // Если не получилось скачать, берем local 1.jpg в качестве копии
-                File fallbackSource = new File(uploadDir + "1.jpg");
-                if (fallbackSource.exists()) {
-                    try {
-                        Files.copy(fallbackSource.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                        System.out.println("👉 Создана локальная копия из 1.jpg");
-                    } catch (Exception ex) {
-                        System.out.println("❌ Ошибка копирования заглушки: " + ex.getMessage());
+                            listing.setImages(newImages);
+                            listingRepository.save(listing);
+                        }
                     }
                 }
+                System.out.println("✅ Кастомные изображения успешно синхронизированы!");
             }
         }
     }

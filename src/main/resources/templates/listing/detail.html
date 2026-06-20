@@ -179,8 +179,18 @@
 
     // Favorites details page integration
     window.toggleFavoriteDetail = function(btn) {
+        const user = window.CURRENT_USER || 'anonymousUser';
+        if (user === 'anonymousUser') {
+            if (typeof handleLogin === 'function') {
+                handleLogin();
+            } else {
+                window.location.href = '/auth/login';
+            }
+            return;
+        }
         const id = btn.getAttribute('data-id');
-        let favorites = JSON.parse(localStorage.getItem('myauto_favorites') || '[]');
+        const storageKey = 'myauto_favorites_' + user;
+        let favorites = JSON.parse(localStorage.getItem(storageKey) || '[]');
         const svg = btn.querySelector('svg');
         
         if (favorites.includes(id)) {
@@ -190,15 +200,18 @@
             favorites.push(id);
             svg.style.fill = '#dc2626';
         }
-        localStorage.setItem('myauto_favorites', JSON.stringify(favorites));
+        localStorage.setItem(storageKey, JSON.stringify(favorites));
     };
 
     // Initialize favorite details state on load
     (function() {
         const btn = document.querySelector('.btn-favorite-detail');
         if (btn) {
+            const user = window.CURRENT_USER || 'anonymousUser';
+            if (user === 'anonymousUser') return;
             const id = btn.getAttribute('data-id');
-            const favorites = JSON.parse(localStorage.getItem('myauto_favorites') || '[]');
+            const storageKey = 'myauto_favorites_' + user;
+            const favorites = JSON.parse(localStorage.getItem(storageKey) || '[]');
             if (favorites.includes(id)) {
                 btn.querySelector('svg').style.fill = '#dc2626';
             }

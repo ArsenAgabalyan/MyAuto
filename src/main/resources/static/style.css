@@ -529,6 +529,7 @@ tr:hover td {
     display: flex;
     flex-direction: column;
     box-shadow: var(--shadow);
+    cursor: pointer;
 }
 
 .car-card:hover {

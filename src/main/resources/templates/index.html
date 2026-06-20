@@ -162,7 +162,7 @@
         /* ── CARS GRID ── */
         .cars-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 16px; }
         .car-col.hidden { display: none !important; }
-        .car-card { background: #fff; border-radius: 10px; border: 1px solid var(--border); overflow: hidden; transition: transform 0.15s, box-shadow 0.15s; }
+        .car-card { background: #fff; border-radius: 10px; border: 1px solid var(--border); overflow: hidden; transition: transform 0.15s, box-shadow 0.15s; cursor: pointer; }
         .car-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
         .car-imgs { position: relative; height: 200px; background: #e5e7eb; overflow: hidden; }
         .car-imgs img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -363,7 +363,7 @@
         <div class="car-col"
              th:each="car : ${cars}"
              th:attr="data-title=${car.title},data-model=${car.carModel},data-year=${car.year},data-price=${car.price},data-desc=${car.description}">
-            <div class="car-card">
+            <div class="car-card" th:attr="onclick='handleCardClick(event, this, ' + ${car.id} + ')'">
                 <!-- Изображения -->
                 <div class="car-imgs" th:id="'imgs-' + ${car.id}">
                     <img th:if="${#lists.isEmpty(car.images)}"
@@ -810,6 +810,13 @@
     function closeOnBg(e, el) { if (e.target === el) { el.classList.remove('open'); document.body.style.overflow=''; } }
     function switchModal(from, to) { closeModal(from); openModal(to); }
 
+    window.handleCardClick = function(e, card, id) {
+        if (e.target.closest('.carousel-btn') || e.target.closest('.btn-favorite') || e.target.closest('.btn-view')) {
+            return;
+        }
+        window.location.href = '/listings/' + id;
+    };
+
     // ── CAROUSEL ──
     function getImgs(btn) {
         const wrap = btn.closest('.car-imgs');
@@ -885,7 +892,8 @@
             yMin = F.yearMin ? (parseInt(F.yearMin.value) || 0) : 0, 
             yMax = F.yearMax ? (parseInt(F.yearMax.value) || Infinity) : Infinity;
         
-        const favorites = JSON.parse(localStorage.getItem('myauto_favorites') || '[]');
+        const user = window.CURRENT_USER || 'anonymousUser';
+        const favorites = (user === 'anonymousUser') ? [] : JSON.parse(localStorage.getItem('myauto_favorites_' + user) || '[]');
         
         let vis=0;
         cards.forEach(c => {
@@ -1472,8 +1480,18 @@
     window.toggleFavorite = function(e, btn) {
         e.preventDefault();
         e.stopPropagation(); // Avoid navigating to details page
+        const user = window.CURRENT_USER || 'anonymousUser';
+        if (user === 'anonymousUser') {
+            if (typeof handleLogin === 'function') {
+                handleLogin();
+            } else {
+                window.location.href = '/auth/login';
+            }
+            return;
+        }
         const id = btn.getAttribute('data-id');
-        let favorites = JSON.parse(localStorage.getItem('myauto_favorites') || '[]');
+        const storageKey = 'myauto_favorites_' + user;
+        let favorites = JSON.parse(localStorage.getItem(storageKey) || '[]');
         
         if (btn.classList.contains('active')) {
             btn.classList.remove('active');
@@ -1484,11 +1502,14 @@
                 favorites.push(id);
             }
         }
-        localStorage.setItem('myauto_favorites', JSON.stringify(favorites));
+        localStorage.setItem(storageKey, JSON.stringify(favorites));
     };
 
     function initFavorites() {
-        const favorites = JSON.parse(localStorage.getItem('myauto_favorites') || '[]');
+        const user = window.CURRENT_USER || 'anonymousUser';
+        if (user === 'anonymousUser') return;
+        const storageKey = 'myauto_favorites_' + user;
+        const favorites = JSON.parse(localStorage.getItem(storageKey) || '[]');
         document.querySelectorAll('.btn-favorite').forEach(btn => {
             const id = btn.getAttribute('data-id');
             if (favorites.includes(id)) {

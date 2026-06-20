@@ -49,8 +49,9 @@
         </th:block>
     </div>
     
-    <script>
+    <script th:inline="javascript">
         // ── NAVBAR HELPERS ──
+        window.CURRENT_USER = /*[[${#authentication.name}]]*/ 'anonymousUser';
         function toggleMobileMenu() {
             document.querySelector('.nav').classList.toggle('mobile-open');
         }
