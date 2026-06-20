@@ -5,6 +5,15 @@
 </head>
 <body>
 <nav th:fragment="navbar" class="nav">
+    <script>
+        // Early execution to prevent flashing
+        (function() {
+            const theme = localStorage.getItem('ma_theme') || 'light';
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+            }
+        })();
+    </script>
     <a class="nav-brand" href="/"><span>MY</span>AUTO</a>
     <button class="nav-toggle" onclick="toggleMobileMenu()" aria-label="Toggle menu">
         <span></span>
@@ -17,6 +26,9 @@
             <button class="lang-btn" onclick="setLang('en')" data-lang="en">EN</button>
             <button class="lang-btn" onclick="setLang('hy')" data-lang="hy">HY</button>
         </div>
+        <button id="themeToggleBtn" class="lang-btn" onclick="toggleTheme()" aria-label="Toggle theme" style="display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); color:#fff; cursor:pointer; font-size:14px; padding:0; transition:var(--transition);" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+            🌙
+        </button>
         <div class="nav-divider"></div>
         <th:block th:if="${#authentication.name == 'anonymousUser'}">
             <button class="btn btn-outline btn-sm nav-btn-outline" onclick="handleLogin()" data-i18n="login" style="border-radius:20px; padding: 8px 18px;">Войти</button>
@@ -195,7 +207,21 @@
             }
         }
 
+        window.toggleTheme = function() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('ma_theme', isDark ? 'dark' : 'light');
+            updateThemeToggleButton();
+        };
+
+        window.updateThemeToggleButton = function() {
+            const btn = document.getElementById('themeToggleBtn');
+            if (!btn) return;
+            const isDark = document.body.classList.contains('dark-mode');
+            btn.textContent = isDark ? '☀️' : '🌙';
+        };
+
         // Initialize navbar
+        updateThemeToggleButton();
         applyNavbarLang();
         updateNavbarUnreadCount();
         setInterval(updateNavbarUnreadCount, 10000);

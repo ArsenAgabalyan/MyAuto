@@ -16,6 +16,8 @@
     --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
     --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+    --text-main: #1e293b;
+    --text-muted: #64748b;
 }
 
 * { 
@@ -27,7 +29,7 @@
 body { 
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
     background-color: var(--light-gray); 
-    color: #1e293b; /* Slate 800 */
+    color: var(--text-main); 
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
 }
@@ -50,7 +52,7 @@ body {
 }
 
 .nav-brand {
-    color: var(--white);
+    color: #ffffff;
     font-size: 22px;
     font-weight: 900;
     text-decoration: none;
@@ -452,10 +454,17 @@ tr:hover td {
 }
 
 .fi-input {
-    background: #f1f5f9;
-    border-color: #e2e8f0;
+    background: var(--light-gray);
+    border: 1px solid var(--border);
+    color: var(--text-main);
     font-size: 13px;
     padding: 8px 12px;
+    outline: none;
+    transition: var(--transition);
+}
+.fi-input:focus {
+    background: var(--white);
+    border-color: var(--red);
 }
 
 .filter-footer {
@@ -1258,7 +1267,7 @@ tr:hover td {
     .nav-toggle span {
         width: 100%;
         height: 2px;
-        background-color: var(--white);
+        background-color: #ffffff;
         border-radius: 2px;
         transition: var(--transition);
     }
@@ -1278,7 +1287,8 @@ tr:hover td {
         top: 60px;
         left: 0;
         right: 0;
-        background: var(--dark);
+        background: rgba(14, 9, 71, 0.98);
+        backdrop-filter: blur(12px);
         border-top: 1px solid rgba(255, 255, 255, 0.1);
         flex-direction: column !important;
         align-items: stretch !important;
@@ -1368,7 +1378,7 @@ tr:hover td {
 
 /* SITE FOOTER */
 .site-footer {
-    background: var(--dark);
+    background: #0f172a;
     color: #94a3b8;
     padding: 60px 0 0 0;
     margin-top: 60px;
@@ -1385,7 +1395,7 @@ tr:hover td {
 }
 
 .footer-col h4 {
-    color: var(--white);
+    color: #ffffff;
     font-size: 15px;
     font-weight: 700;
     margin-bottom: 20px;
@@ -1426,7 +1436,7 @@ tr:hover td {
 .footer-brand {
     font-size: 24px;
     font-weight: 900;
-    color: var(--white);
+    color: #ffffff;
     text-decoration: none;
     letter-spacing: -1px;
 }
@@ -1528,4 +1538,533 @@ tr:hover td {
         gap: 12px;
         text-align: center;
     }
+}
+
+/* ── DARK MODE STYLES ── */
+body.dark-mode {
+    --light-gray: #090d16; /* Deep Midnight Blue */
+    --white: #131b2e; /* Dark Navy/Slate Card background */
+    --border: #22314d; /* Steel Blue border */
+    --border-light: #131b2e;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.45), 0 4px 6px -4px rgba(0, 0, 0, 0.45);
+    --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.55), 0 8px 10px -6px rgba(0, 0, 0, 0.55);
+    --text-main: #f1f5f9; /* Slate 100 */
+    --text-muted: #94a3b8; /* Slate 400 */
+    --dark: #f8fafc;
+    background-color: var(--light-gray);
+    color: var(--text-main);
+}
+body.dark-mode .text-muted {
+    color: var(--text-muted) !important;
+}
+body.dark-mode .text-secondary {
+    color: var(--text-muted) !important;
+}
+
+body.dark-mode .count-pill {
+    background: #22314d !important;
+    color: #cbd5e1 !important;
+}
+body.dark-mode .desc-box p {
+    color: var(--text-muted) !important;
+}
+
+/* Form Controls & Inputs */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+    background: #090d16 !important;
+    border-color: #22314d !important;
+    color: #f1f5f9 !important;
+}
+body.dark-mode input:focus,
+body.dark-mode select:focus,
+body.dark-mode textarea:focus {
+    background: #131b2e !important;
+    border-color: var(--red) !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+}
+body.dark-mode .form-label,
+body.dark-mode .fi-label {
+    color: #94a3b8 !important;
+}
+
+/* Modals */
+body.dark-mode .overlay {
+    background: rgba(4, 6, 10, 0.8) !important;
+}
+body.dark-mode .modal-box,
+body.dark-mode .modal-box.wide {
+    background: #131b2e !important;
+    color: #f1f5f9 !important;
+    border: 1px solid #22314d !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
+}
+body.dark-mode .modal-close {
+    color: #94a3b8 !important;
+}
+body.dark-mode .modal-close:hover {
+    color: #f1f5f9 !important;
+}
+
+/* Cards & Grid elements */
+body.dark-mode .car-card {
+    background: #131b2e !important;
+    border-color: #22314d !important;
+}
+body.dark-mode .car-card:hover {
+    border-color: #384e77 !important;
+}
+body.dark-mode .car-body {
+    color: #f1f5f9 !important;
+}
+body.dark-mode .car-desc {
+    color: #94a3b8 !important;
+}
+body.dark-mode .car-meta {
+    color: #94a3b8 !important;
+    border-color: #22314d !important;
+}
+body.dark-mode .car-meta span {
+    background: rgba(34, 49, 77, 0.6) !important;
+    color: #cbd5e1 !important;
+}
+
+/* Details Page */
+body.dark-mode .detail-main {
+    background: #131b2e !important;
+    border-color: #22314d !important;
+}
+body.dark-mode .detail-sidebar {
+    background: #131b2e !important;
+    border-color: #22314d !important;
+}
+body.dark-mode .spec-item {
+    background: #090d16 !important;
+    border-color: #22314d !important;
+}
+body.dark-mode .spec-label {
+    color: #94a3b8 !important;
+}
+body.dark-mode .spec-val {
+    color: #f1f5f9 !important;
+}
+body.dark-mode .owner-card {
+    background: #090d16 !important;
+    border-color: #22314d !important;
+}
+
+/* Chats and Dialogs */
+body.dark-mode .page-header {
+    color: #f1f5f9 !important;
+    border-bottom-color: var(--red) !important;
+}
+body.dark-mode .chat-card {
+    background: #131b2e !important;
+    border-color: #22314d !important;
+    color: #f1f5f9 !important;
+}
+body.dark-mode .chat-card:hover {
+    border-color: var(--red) !important;
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.25) !important;
+}
+body.dark-mode .chat-card .text-dark {
+    color: #f1f5f9 !important;
+}
+body.dark-mode .chat-card .text-muted {
+    color: #94a3b8 !important;
+}
+body.dark-mode div.bg-white.rounded-4.shadow-sm.border {
+    background-color: #131b2e !important;
+    border-color: #22314d !important;
+}
+body.dark-mode div.bg-white.rounded-4.shadow-sm.border .text-secondary {
+    color: #94a3b8 !important;
+}
+body.dark-mode .btn-outline-secondary {
+    color: #94a3b8 !important;
+    border-color: #22314d !important;
+}
+body.dark-mode .btn-outline-secondary:hover {
+    color: #f1f5f9 !important;
+    background-color: #22314d !important;
+    border-color: #384e77 !important;
+}
+body.dark-mode .chat-container {
+    background: #131b2e !important;
+    border: 1px solid #22314d !important;
+    color: #f1f5f9 !important;
+}
+body.dark-mode .chat-header {
+    background-color: #131b2e !important;
+    border-bottom: 1px solid #22314d !important;
+    color: #f1f5f9 !important;
+}
+body.dark-mode .chat-header .bg-white {
+    background-color: #22314d !important;
+    color: var(--red) !important;
+}
+body.dark-mode .chat-messages-area {
+    background-color: #090d16 !important;
+}
+body.dark-mode .msg-other {
+    background-color: #22314d !important;
+    color: #f1f5f9 !important;
+    border-color: #22314d !important;
+}
+body.dark-mode .msg-other .msg-author {
+    color: #94a3b8 !important;
+}
+body.dark-mode .msg-other .msg-text {
+    color: #f1f5f9 !important;
+}
+body.dark-mode .msg-other .msg-time {
+    color: #cbd5e1 !important;
+    opacity: 0.6;
+}
+body.dark-mode .chat-footer {
+    background-color: #131b2e !important;
+    border-top: 1px solid #22314d !important;
+}
+body.dark-mode .chat-input {
+    background-color: #090d16 !important;
+    border-color: #22314d !important;
+    color: #f1f5f9 !important;
+}
+body.dark-mode .chat-input:focus {
+    background-color: #090d16 !important;
+    border-color: var(--red) !important;
+    color: #f1f5f9 !important;
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+}
+body.dark-mode .avatar {
+    background-color: #22314d !important;
+    color: #cbd5e1 !important;
+}
+body.dark-mode .avatar-mine {
+    background-color: #ffc107 !important;
+    color: #000000 !important;
+}
+
+/* Buttons */
+body.dark-mode .btn-ghost {
+    color: #f1f5f9 !important;
+    border-color: #22314d !important;
+}
+body.dark-mode .btn-ghost:hover {
+    background: #22314d !important;
+    color: #f1f5f9 !important;
+}
+body.dark-mode .btn-view {
+    background: #22314d !important;
+    color: #f1f5f9 !important;
+}
+body.dark-mode .btn-view:hover {
+    background: #384e77 !important;
+}
+
+/* Table in Profile */
+body.dark-mode table,
+body.dark-mode th,
+body.dark-mode td {
+    border-color: #22314d !important;
+}
+body.dark-mode th {
+    background: #090d16 !important;
+    color: #f1f5f9 !important;
+}
+body.dark-mode td {
+    color: #cbd5e1 !important;
+}
+body.dark-mode tr:hover td {
+    background: #090d16 !important;
+}
+
+/* Quick Tags / Badges */
+body.dark-mode .car-tags span {
+    background: rgba(34, 49, 77, 0.4) !important;
+    color: #94a3b8 !important;
+}
+
+/* Scrollbar customization for dark mode */
+body.dark-mode ::-webkit-scrollbar {
+    width: 10px;
+}
+body.dark-mode ::-webkit-scrollbar-track {
+    background: #090d16;
+}
+body.dark-mode ::-webkit-scrollbar-thumb {
+    background: #22314d;
+    border-radius: 5px;
+}
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: #384e77;
+}
+
+/* Toggle filters button styling in light/dark mode */
+.btn-filter-toggle {
+    background: #f1f5f9;
+    color: #475569;
+}
+.btn-filter-toggle:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+body.dark-mode .btn-filter-toggle {
+    background: #090d16 !important;
+    border-color: #22314d !important;
+    color: #94a3b8 !important;
+}
+body.dark-mode .btn-filter-toggle:hover {
+    background: #131b2e !important;
+    color: #f1f5f9 !important;
+}
+
+/* Wizard Stepper in Dark Mode */
+body.dark-mode .wizard-stepper {
+    background: #090d16 !important;
+    border-color: #22314d !important;
+}
+body.dark-mode .step-label {
+    color: #f1f5f9 !important;
+}
+body.dark-mode .step-line {
+    background: #22314d !important;
+}
+body.dark-mode .step-num {
+    background: #22314d !important;
+    color: #cbd5e1 !important;
+}
+body.dark-mode .step-indicator.active .step-num {
+    background: var(--red) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.3) !important;
+}
+body.dark-mode .step-indicator.completed .step-num {
+    background: #16a34a !important;
+    color: #ffffff !important;
+}
+
+/* File Upload Zone in Dark Mode */
+body.dark-mode .file-upload-box {
+    background: #090d16 !important;
+    border-color: #22314d !important;
+}
+body.dark-mode .file-upload-box:hover,
+body.dark-mode .file-upload-box.dragover {
+    border-color: var(--red) !important;
+    background: rgba(220, 38, 38, 0.08) !important;
+}
+body.dark-mode .upload-text {
+    color: #cbd5e1 !important;
+}
+body.dark-mode .progress-bar-container {
+    background: #090d16 !important;
+    border-color: #22314d !important;
+}
+body.dark-mode .progress-bar-track {
+    background: #22314d !important;
+}
+
+/* Characteristics / Spec Checkboxes in Dark Mode */
+body.dark-mode .spec-card {
+    background: #090d16 !important;
+    border-color: #22314d !important;
+}
+body.dark-mode .spec-card:hover {
+    background: #131b2e !important;
+    border-color: #384e77 !important;
+}
+body.dark-mode .spec-card-check {
+    background: #090d16 !important;
+    border-color: #22314d !important;
+}
+body.dark-mode .spec-card input:checked ~ .spec-card-check {
+    background: var(--red) !important;
+    border-color: var(--red) !important;
+    color: #ffffff !important;
+}
+body.dark-mode .spec-card-label {
+    color: #cbd5e1 !important;
+}
+body.dark-mode .spec-card input:checked ~ .spec-card-label {
+    color: #ffffff !important;
+}
+
+/* Selector Buttons in Dark Mode */
+body.dark-mode .selector-btn {
+    background: #090d16 !important;
+    border-color: #22314d !important;
+    color: #cbd5e1 !important;
+}
+body.dark-mode .selector-btn:hover {
+    background: #131b2e !important;
+    border-color: #384e77 !important;
+    color: #ffffff !important;
+}
+body.dark-mode .selector-group input[type="radio"]:checked + .selector-btn {
+    background: var(--red) !important;
+    border-color: var(--red) !important;
+    color: #ffffff !important;
+}
+
+/* Form label dark mode styling */
+body.dark-mode label {
+    color: #94a3b8 !important;
+}
+
+/* Active Dialogs / Chat Widgets in Dark Mode */
+body.dark-mode #chatWidgetBox,
+body.dark-mode #chatPopup {
+    background-color: #131b2e !important;
+    border-color: #22314d !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5) !important;
+}
+body.dark-mode #widgetChatsList,
+body.dark-mode #widgetList {
+    background-color: #090d16 !important;
+}
+body.dark-mode #widgetChatsList a,
+body.dark-mode #widgetList a {
+    background-color: #131b2e !important;
+    border-color: #22314d !important;
+    color: #f1f5f9 !important;
+}
+body.dark-mode #widgetChatsList a:hover,
+body.dark-mode #widgetList a:hover {
+    border-color: var(--red) !important;
+    background-color: #1b2742 !important;
+}
+body.dark-mode #widgetChatsList a div,
+body.dark-mode #widgetList a div {
+    color: #f1f5f9 !important;
+}
+body.dark-mode #widgetChatsList a div[style*="color:#64748b"],
+body.dark-mode #widgetChatsList a div[style*="color: #64748b"],
+body.dark-mode #widgetList div[style*="color:#64748b"],
+body.dark-mode #widgetList div[style*="color: #64748b"] {
+    color: #cbd5e1 !important;
+}
+body.dark-mode .widget-popup div[style*="background:#f1f5f9"],
+body.dark-mode .widget-popup div[style*="background: #f1f5f9"],
+body.dark-mode #chatPopup div[style*="background:#f1f5f9"],
+body.dark-mode #chatPopup div[style*="background: #f1f5f9"] {
+    background-color: #131b2e !important;
+    border-top-color: #22314d !important;
+}
+body.dark-mode #chatPopup .widget-header {
+    background-color: #090d16 !important;
+    border-bottom: 1px solid #22314d !important;
+}
+body.dark-mode #chatWidgetBox div[style*="background:#1e293b"],
+body.dark-mode #chatWidgetBox div[style*="background: #1e293b"] {
+    background-color: #090d16 !important;
+    border-bottom: 1px solid #22314d !important;
+}
+
+/* Edit Listing Button styling */
+.btn-edit-listing {
+    width: 100%;
+    text-align: center;
+    margin-top: 8px;
+    background: var(--dark);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+    transition: var(--transition);
+}
+.btn-edit-listing:hover {
+    background: #1e293b;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+body.dark-mode .btn-edit-listing {
+    background: #22314d !important;
+    color: #f1f5f9 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+body.dark-mode .btn-edit-listing:hover {
+    background: #384e77 !important;
+    color: #ffffff !important;
+}
+
+/* Floating Chat buttons in Dark Mode */
+body.dark-mode .floating-widget-btn,
+body.dark-mode .widget-btn {
+    background: #22314d !important;
+    color: #f1f5f9 !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4) !important;
+}
+body.dark-mode .floating-widget-btn:hover,
+body.dark-mode .widget-btn:hover {
+    background: #384e77 !important;
+    color: #ffffff !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Seller Phone Box styling */
+.seller-phone-box {
+    background: #fff1f2;
+    border: 1px solid #ffe4e6;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 4px;
+}
+.phone-label {
+    font-size: 12px;
+    color: #9f1239;
+    display: block;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+.phone-link {
+    font-size: 18px;
+    font-weight: 700;
+    color: #e31e24;
+    text-decoration: none;
+}
+body.dark-mode .seller-phone-box {
+    background: rgba(220, 38, 38, 0.08) !important;
+    border-color: rgba(220, 38, 38, 0.2) !important;
+}
+body.dark-mode .phone-label {
+    color: #fca5a5 !important;
+}
+body.dark-mode .phone-link {
+    color: var(--red) !important;
+}
+
+/* Reject Button styling */
+.btn-reject-listing {
+    color: #dc2626;
+    border: 1px solid #fee2e2;
+    background: transparent;
+    transition: var(--transition);
+}
+.btn-reject-listing:hover {
+    background: #fee2e2;
+    color: #dc2626;
+}
+body.dark-mode .btn-reject-listing {
+    color: #fca5a5 !important;
+    border-color: rgba(220, 38, 38, 0.3) !important;
+    background: transparent !important;
+}
+body.dark-mode .btn-reject-listing:hover {
+    background: rgba(220, 38, 38, 0.15) !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .alert-ok {
+    background: rgba(16, 185, 129, 0.15) !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+    color: #34d399 !important;
+}
+body.dark-mode .alert-info {
+    background: rgba(14, 165, 233, 0.15) !important;
+    border-color: rgba(14, 165, 233, 0.3) !important;
+    color: #38bdf8 !important;
 }
