@@ -13,6 +13,19 @@
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <div class="container">
+
+    <div style="margin-bottom: 16px;">
+        <a th:href="@{/}" style="text-decoration: none; color: #64748b; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; transition: color 0.2s;" onmouseover="this.style.color='#1e293b'" onmouseout="this.style.color='#64748b'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Назад на главную
+        </a>
+    </div>
+
+
+
     <div class="detail-grid">
 
         <div>
